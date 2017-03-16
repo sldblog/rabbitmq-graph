@@ -52,7 +52,7 @@ class Discover
     end
     puts '  }'
 
-    puts '  subgraph cluster_Entities {'
+    puts '  subgraph Entities {'
     puts '    graph [style=invisible]'
     puts '    node [shape=box fillcolor=turquoise style=filled]'
     routes.map { |route| route[:entity] }.uniq.each do |entity|
