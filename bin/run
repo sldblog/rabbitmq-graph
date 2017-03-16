@@ -1,4 +1,4 @@
 #!/usr/bin/env ruby
 require_relative '../app/discover'
 
-Discover.new.dot
+puts Discover.new.to_dot

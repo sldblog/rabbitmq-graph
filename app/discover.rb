@@ -25,54 +25,55 @@ class Discover
   def routes
     items = {}
     bindings.each do |binding|
-      queue_name = binding[:queue]
+      $stderr.print '.'
+      queue_name = binding[:queue_name]
       items[queue_name] ||= []
       items[queue_name] << route_from(binding)
     end
 
     bound_queues.each do |queue|
       $stderr.print '.'
-      queue_name = queue[:queue]
+      queue_name = queue[:queue_name]
       items[queue_name] ||= []
       items[queue_name].each { |route| route.merge!(route_to(queue)) }
     end
 
-    items.flat_map { |_name, details| details }.reject(&:nil?)
+    items.inject([]) do |list, pair|
+      queue_name, routes = pair
+      next unless routes
+      list << routes.map do |route|
+        route[:queue_name] = queue_name
+        route[:to_app] ||= ''
+        route[:from_app] ||= ''
+        route[:entity] ||= ''
+        route[:key] ||= []
+        route
+      end
+    end.flatten
   end
 
-  def dot
-    puts "digraph G {"
+  def to_dot
+    apps = <<-APPS
+      subgraph Apps {
+        node [shape=hexagon fillcolor=yellow style=filled]
+        #{application_nodes.join("\n")}
+      }
+    APPS
 
-    puts '  subgraph Apps {'
-    puts '    node [shape=hexagon fillcolor=yellow style=filled]'
-    routes.map { |route| [route[:from_app], route[:to_app]] }.flatten
-          .map { |app| app || '' }.sort.uniq.each do |app|
-      node = '    "' + app + '"'
-      node += '[fillcolor=red]' if app.empty?
-      puts node
-    end
-    puts '  }'
+    entities = <<-ENTITIES
+      subgraph Entities {
+        node [shape=box fillcolor=turquoise style=filled]
+        #{entity_nodes.join("\n")}
+      }
+    ENTITIES
 
-    puts '  subgraph Entities {'
-    puts '    graph [style=invisible]'
-    puts '    node [shape=box fillcolor=turquoise style=filled]'
-    routes.map { |route| route[:entity] }
-          .map { |entity| entity || '' }.sort.uniq.each do |entity|
-      puts '    "' + entity + '"'
-    end
-    puts '  }'
-
-    routes.each do |route|
-      edge = '  '
-      edge += [route[:from_app], route[:entity], route[:to_app]].map { |text| '"' + text.to_s + '"' }.join('->')
-      edge += '['
-      edge += ' label="' + route[:key].to_s.split('.')[2..-1]&.join('.').to_s + '"'
-      edge += ' color="red"' if route[:to_app].to_s.empty?
-      edge += ']'
-      puts edge
-    end
-
-    puts "}"
+    <<-GRAPH
+    digraph G {
+      #{apps}
+      #{entities}
+      #{message_edges.join("\n")}
+    }
+    GRAPH
   end
 
   def bindings
@@ -81,7 +82,9 @@ class Discover
       .reject { |binding| binding['destination'] == binding['routing_key'] }
       .reject { |binding| binding['routing_key'].empty? }
       .select { |binding| binding['destination_type'] == 'queue' }
-      .map    { |binding| { vhost: binding['vhost'], queue: binding['destination'], routing_key: binding['routing_key'] } }
+      .map    { |binding| { vhost: binding['vhost'],
+                            queue_name: binding['destination'],
+                            routing_key: binding['routing_key'] } }
   end
 
   def bound_queues
@@ -91,7 +94,7 @@ class Discover
       .flat_map { |queue| queue['consumer_details'] }
       .reject(&:empty?)
       .map      { |consumer| { vhost: consumer['queue']['vhost'],
-                               queue: consumer['queue']['name'],
+                               queue_name: consumer['queue']['name'],
                                consumer: sanitize_tag(consumer['consumer_tag']) } }
   end
 
@@ -106,12 +109,47 @@ class Discover
   end
 
   def route_from(binding)
-    { key: binding[:routing_key],
-      entity: binding[:routing_key].split('.')[1],
-      from_app: binding[:routing_key].split('.')[0] }
+    key = binding[:routing_key].split('.')
+    { key: key, from_app: key[0], entity: key[1] }
   end
 
   def route_to(queue)
     { to_app: queue[:consumer] }
+  end
+
+  def application_nodes
+    applications = routes.map { |route| [route[:from_app], route[:to_app]] }.flatten.sort.uniq
+    applications.inject([]) do |list, app|
+      label = %Q("#{app}")
+      label += ' [fillcolor=red]' if app.empty?
+      list << label
+    end
+  end
+
+  def entity_nodes
+    entities = routes.map { |route| route[:entity] }.sort.uniq
+    entities.inject([]) do |list, entity|
+      list << %Q("#{entity}")
+    end
+  end
+
+  def message_edges
+    routes.inject([]) do |list, route|
+      qualifier = route[:key][2..-1]&.join('.').to_s
+
+      edge_options = []
+      edge_options << %Q(label="#{qualifier}")
+      edge_options << %Q(color="red") if route[:to_app].to_s.empty?
+
+      list << %Q(#{route_to_path(route)} [#{edge_options.join(' ')}])
+    end.uniq
+  end
+
+  def route_to_path(route)
+    [].tap { |path|
+      path << route[:from_app]
+      path << route[:entity]
+      path << route[:to_app]
+    }.map { |text| %("#{text}") }.join('->')
   end
 end
