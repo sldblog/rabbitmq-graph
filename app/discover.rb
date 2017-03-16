@@ -45,18 +45,20 @@ class Discover
 
     puts '  subgraph Apps {'
     puts '    node [shape=hexagon fillcolor=yellow style=filled]'
-    routes.map { |route| [route[:from_app], route[:to_app]] }.flatten.uniq.each do |app|
-      app = '    "' + app.to_s + '"'
-      app += '[fillcolor=red]' if app.to_s.empty?
-      puts app
+    routes.map { |route| [route[:from_app], route[:to_app]] }.flatten
+          .map { |app| app || '' }.sort.uniq.each do |app|
+      node = '    "' + app + '"'
+      node += '[fillcolor=red]' if app.empty?
+      puts node
     end
     puts '  }'
 
     puts '  subgraph Entities {'
     puts '    graph [style=invisible]'
     puts '    node [shape=box fillcolor=turquoise style=filled]'
-    routes.map { |route| route[:entity] }.uniq.each do |entity|
-      puts '    "' + entity.to_s + '"'
+    routes.map { |route| route[:entity] }
+          .map { |entity| entity || '' }.sort.uniq.each do |entity|
+      puts '    "' + entity + '"'
     end
     puts '  }'
 
