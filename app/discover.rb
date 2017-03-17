@@ -96,7 +96,7 @@ class Discover
   def bound_queues
     @queues ||= client
       .queues.lazy
-      .map      { |queue| JSON.parse client.query_api(path: "/queues/#{queue['vhost']}/#{queue['name']}").body }
+      .map      { |queue| JSON.parse client.query_api(path: "/queues/#{URI.escape(queue['vhost'], %r{/})}/#{queue['name']}").body }
       .flat_map { |queue| queue['consumer_details'] }
       .reject(&:empty?)
       .map      { |consumer| { vhost: consumer['queue']['vhost'],
