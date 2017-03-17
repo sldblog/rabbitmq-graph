@@ -11,15 +11,32 @@ Discover RabbitMQ topology.
 
 Without arguments `bin/run` will connect to `localhost:5672` and `localhost:15672` with the default guest user.
 
-It's possible to configure both URIs with `RABBITMQ_URI` and `RABBITMQ_API_URI`. Below is an example of connecting to a
-dockerised RabbitMQ.
+### Configuration
 
-`MAX_LEVEL` can also be used to control the level of depth in the graph:
+| Setting | Environment variable | Effect | Default |
+| ------- | -------------------- | ------ | ------- |
+| Graph level | `LEVEL` | Sets the complexity level of the graph. | 2 |
+| Edge level | `EDGE_LEVEL` | Sets the complexity level of edges. | 2 |
+| RabbitMQ URL | `RABBITMQ_URI` | Specifies the connection URL to RabbitMQ | `amqp://guest:guest@localhost:5672/` |
+| RabbitMQ management URL | `RABBITMQ_API_URI` | Specifies the connection URL to RabbitMQ management API | `http://localhost:15672/` |
 
-- `1` will only show application to application relations. Edge labels will display the rest of the routing key beyond application part.
-- `2` will show application to entity to application relations. Edge labels will display the routing key beyond entity part.
+### Graph level
+
+- **1**: will only show application to application relations. Edge labels will display the rest of the routing key beyond application part.
+- **2**: will show application to entity to application relations. Edge labels will display the routing key beyond entity part.
+
+### Edge level
+
+Affects the complexity of edges:
+
+- **0**: displays the full routing key per edge
+- **1**: displays `entity.[rest.]*.action` as label per edge
+- **2**: displays `[rest.]*.action` as label per edge
+- _high number_: does not display labels. Effectively means it reduces number of edges to 1 between nodes.
 
 ### Example
+
+Running the discovery against a dockerised `rabbitmq:3.4-management` with dynamic ports:
 
 ```
 $ RABBITMQ_API_URI=http://localhost:32888/ RABBITMQ_URI=amqp://guest:guest@localhost:32889/test bin/run | tee test.dot

@@ -4,11 +4,13 @@ require 'logger'
 require 'uri'
 
 class Discover
+  APPLICATION_ONLY_LEVEL = 1
   HIGHEST_LEVEL = 2
 
   def initialize(uri: ENV.fetch('RABBITMQ_URI', 'amqp://guest:guest@127.0.0.1:5672'),
                  api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://127.0.0.1:15672/'),
-                 max_level: ENV.fetch('LEVEL', HIGHEST_LEVEL).to_i)
+                 graph_level: ENV.fetch('LEVEL', HIGHEST_LEVEL).to_i,
+                 edge_level: ENV.fetch('EDGE_LEVEL', HIGHEST_LEVEL).to_i)
     Hutch::Logging.logger = Logger.new(STDERR)
 
     Hutch::Config.set(:uri, uri)
@@ -18,7 +20,8 @@ class Discover
       Hutch::Config.set(:mq_api_ssl, parsed_uri.scheme == 'https')
     end
 
-    @max_level = max_level
+    @graph_level = graph_level
+    @edge_level = edge_level
     client
   end
 
@@ -106,7 +109,7 @@ class Discover
 
   private
 
-  attr_reader :max_level
+  attr_reader :graph_level, :edge_level
 
   def sanitize_tag(tag)
     return 'ruby' if tag =~ /^bunny-/ || tag =~ /^hutch-/
@@ -135,7 +138,7 @@ class Discover
   end
 
   def entity_nodes
-    return [] unless max_level > 1
+    return [] unless graph_level > APPLICATION_ONLY_LEVEL
     entities = routes.map { |route| route[:entity] }.sort.uniq
     entities.inject([]) do |list, entity|
       list << %Q("#{entity}")
@@ -144,8 +147,7 @@ class Discover
 
   def message_edges
     routes.inject([]) do |list, route|
-      key_offset = [HIGHEST_LEVEL, max_level].min
-      qualifier = route[:key][key_offset..-1]&.join('.').to_s
+      qualifier = route[:key][edge_level..-1]&.join('.').to_s
 
       edge_options = []
       edge_options << %Q(label="#{qualifier}")
@@ -158,7 +160,7 @@ class Discover
   def route_to_path(route)
     [].tap { |path|
       path << route[:from_app]
-      path << route[:entity] if max_level > 1
+      path << route[:entity] if graph_level > APPLICATION_ONLY_LEVEL
       path << route[:to_app]
     }.map { |text| %("#{text}") }.join('->')
   end
