@@ -1,5 +1,7 @@
 # rabbitmq-graph
 
+[![Dependency Status](https://gemnasium.com/badges/github.com/sldblog/rabbitmq-graph.svg)](https://gemnasium.com/github.com/sldblog/rabbitmq-graph)
+
 Discover RabbitMQ topology.
 
 ## Assumptions
