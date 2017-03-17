@@ -4,15 +4,21 @@ require 'logger'
 require 'uri'
 
 class Discover
-  def initialize(rabbitmq_uri: ENV.fetch('RABBITMQ_URI', 'amqp://guest:guest@127.0.0.1:5672'),
-                 rabbitmq_api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://127.0.0.1:15672/'))
+  HIGHEST_LEVEL = 2
+
+  def initialize(uri: ENV.fetch('RABBITMQ_URI', 'amqp://guest:guest@127.0.0.1:5672'),
+                 api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://127.0.0.1:15672/'),
+                 max_level: ENV.fetch('LEVEL', HIGHEST_LEVEL).to_i)
     Hutch::Logging.logger = Logger.new(STDERR)
-    Hutch::Config.set(:uri, rabbitmq_uri)
-    URI(rabbitmq_api_uri).tap do |uri|
-      Hutch::Config.set(:mq_api_host, uri.host)
-      Hutch::Config.set(:mq_api_port, uri.port || (uri.scheme == 'https' ? 443 : 15672))
-      Hutch::Config.set(:mq_api_ssl, uri.scheme == 'https')
+
+    Hutch::Config.set(:uri, uri)
+    URI(api_uri).tap do |parsed_uri|
+      Hutch::Config.set(:mq_api_host, parsed_uri.host)
+      Hutch::Config.set(:mq_api_port, parsed_uri.port || (parsed_uri.scheme == 'https' ? 443 : 15672))
+      Hutch::Config.set(:mq_api_ssl, parsed_uri.scheme == 'https')
     end
+
+    @max_level = max_level
     client
   end
 
@@ -100,6 +106,8 @@ class Discover
 
   private
 
+  attr_reader :max_level
+
   def sanitize_tag(tag)
     return 'ruby' if tag =~ /^bunny-/ || tag =~ /^hutch-/
     return 'jvm' if tag =~ /^amq\.ctag/
@@ -127,6 +135,7 @@ class Discover
   end
 
   def entity_nodes
+    return [] unless max_level > 1
     entities = routes.map { |route| route[:entity] }.sort.uniq
     entities.inject([]) do |list, entity|
       list << %Q("#{entity}")
@@ -135,7 +144,8 @@ class Discover
 
   def message_edges
     routes.inject([]) do |list, route|
-      qualifier = route[:key][2..-1]&.join('.').to_s
+      key_offset = [HIGHEST_LEVEL, max_level].min
+      qualifier = route[:key][key_offset..-1]&.join('.').to_s
 
       edge_options = []
       edge_options << %Q(label="#{qualifier}")
@@ -148,7 +158,7 @@ class Discover
   def route_to_path(route)
     [].tap { |path|
       path << route[:from_app]
-      path << route[:entity]
+      path << route[:entity] if max_level > 1
       path << route[:to_app]
     }.map { |text| %("#{text}") }.join('->')
   end

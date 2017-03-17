@@ -12,7 +12,14 @@ Discover RabbitMQ topology.
 Without arguments `bin/run` will connect to `localhost:5672` and `localhost:15672` with the default guest user.
 
 It's possible to configure both URIs with `RABBITMQ_URI` and `RABBITMQ_API_URI`. Below is an example of connecting to a
-dockerised RabbitMQ:
+dockerised RabbitMQ.
+
+`MAX_LEVEL` can also be used to control the level of depth in the graph:
+
+- `1` will only show application to application relations. Edge labels will display the rest of the routing key beyond application part.
+- `2` will show application to entity to application relations. Edge labels will display the routing key beyond entity part.
+
+### Example
 
 ```
 $ RABBITMQ_API_URI=http://localhost:32888/ RABBITMQ_URI=amqp://guest:guest@localhost:32889/test bin/run | tee test.dot
