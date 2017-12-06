@@ -6,7 +6,13 @@ Discover RabbitMQ topology.
 
 ## Assumptions
 
-- Routing keys are in the format of `application.entity.event_verb` or `application.entity.postfix1.postfix2`. Any number of postfixes are possible, separated by dots.
+- Routing keys are segmented with dots (`.`).
+    - The first segment is assumed to be the source application.  
+      Example: `splitter.experiment.something.assigned` &rarr; `splitter` is the application publishing the message.
+    - The second segment is assumed to be the entity.  
+      Example: `splitter.experiment.something.assigned` &rarr; `experiment` is the entity being actioned.
+    - The rest of the segments is assumed to be the action.  
+      Example: `splitter.experiment.something.assigned` &rarr; `something.assigned` is the action.
 - [Consumer tags][hutch-consumer-tag-pr] are configured to contain the name of the consuming application.
 
 ## How to run?
