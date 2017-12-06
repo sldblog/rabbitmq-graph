@@ -6,7 +6,7 @@ Discover RabbitMQ topology.
 
 ## Assumptions
 
-- Routing keys are in the format of `application.entity.<snip>`.
+- Routing keys are in the format of `application.entity.event_verb` or `application.entity.postfix1.postfix2`. Any number of postfixes are possible, separated by dots.
 - Consumer tags are configured to contain the name of the consuming application.
 
 ## How to run?
