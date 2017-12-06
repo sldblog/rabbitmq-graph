@@ -7,7 +7,7 @@ Discover RabbitMQ topology.
 ## Assumptions
 
 - Routing keys are in the format of `application.entity.event_verb` or `application.entity.postfix1.postfix2`. Any number of postfixes are possible, separated by dots.
-- Consumer tags are configured to contain the name of the consuming application.
+- [Consumer tags][hutch-consumer-tag-pr] are configured to contain the name of the consuming application.
 
 ## How to run?
 
@@ -64,4 +64,5 @@ $ open test.dot.png
 
 Hutch supports consumer tag prefixes since [0.24][hutch-0.24].
 
+[hutch-consumer-tag-pr]: https://github.com/gocardless/hutch/pull/265
 [hutch-0.24]: https://github.com/gocardless/hutch/blob/master/CHANGELOG.md#0240--february-1st-2017
