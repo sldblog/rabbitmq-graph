@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Presents a RabbitMQ topology in graphviz's .dot format
 class DotFormat
   APPLICATION_ONLY_LEVEL = 1
   HIGHEST_LEVEL = 2

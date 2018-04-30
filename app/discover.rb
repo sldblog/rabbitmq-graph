@@ -6,10 +6,14 @@ require 'logger'
 require 'ruby-progressbar'
 require 'uri'
 
+# Using RabbitMQ's HTTP API, discovers the server's publisher/subscriber topology.
+#
+# Assumes that:
+#  - `consumer_tag`s are set on consumers to the consuming application's name
+#  - bound routing keys are in the format of `application_name.entity_name[.action]+`
 class Discover
   def initialize(uri: ENV.fetch('RABBITMQ_URI', 'amqp://guest:guest@127.0.0.1:5672'),
-                 api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://127.0.0.1:15672/'),
-                 api_client: nil)
+                 api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://127.0.0.1:15672/'))
     Hutch::Logging.logger = Logger.new(STDERR)
 
     Hutch::Config.set(:uri, uri)
@@ -19,11 +23,8 @@ class Discover
       Hutch::Config.set(:mq_api_ssl, parsed_uri.scheme == 'https')
     end
 
-    @client = api_client
-    unless client
-      Hutch.connect
-      @client = Hutch.broker.api_client
-    end
+    Hutch.connect
+    @client = Hutch.broker.api_client
   end
 
   def topology
@@ -104,7 +105,7 @@ class Discover
   end
 
   def fetch_queue_data(vhost, name)
-    escaped_vhost_path = URI.escape(vhost, %r{/})
+    escaped_vhost_path = URI.encode_www_form_component(vhost)
     JSON.parse(client.query_api(path: "/queues/#{escaped_vhost_path}/#{name}").body)
   end
 
