@@ -1,0 +1,33 @@
+version: 2
+jobs:
+  rubocop:
+    working_directory: ~/rabbitmq-graph
+    docker:
+      - image: ruby:2.4-alpine3.7
+    steps:
+      - run:
+          name: Prepare environment
+          command: apk add --no-cache --no-progress build-base git
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-gems-{{ checksum "Gemfile.lock" }}
+            - v1-gems
+      - run:
+          name: Install dependencies
+          command: bundle check --path=vendor/bundle || bundle install --path=vendor/bundle
+      - save_cache:
+         key: v1-gems-{{ checksum "Gemfile.lock" }}
+         paths:
+           - vendor/bundle
+
+      - run:
+          name: Run linter
+          command: bundle exec rubocop
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - rubocop
