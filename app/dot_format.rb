@@ -13,24 +13,10 @@ class DotFormat
   end
 
   def present
-    apps = <<-APPS
-      subgraph Apps {
-        node [shape=hexagon fillcolor=yellow style=filled]
-        #{application_nodes.join("\n")}
-      }
-    APPS
-
-    entities = <<-ENTITIES
-      subgraph Entities {
-        node [shape=box fillcolor=turquoise style=filled]
-        #{entity_nodes.join("\n")}
-      }
-    ENTITIES
-
     <<-GRAPH
     digraph G {
-      #{apps}
-      #{entities}
+      #{render_application_subgraph}
+      #{render_entity_subgraph}
       #{message_edges.join("\n")}
     }
     GRAPH
@@ -39,6 +25,24 @@ class DotFormat
   private
 
   attr_reader :topology, :graph_level, :edge_level
+
+  def render_application_subgraph
+    <<-APPS
+      subgraph Apps {
+        node [shape=hexagon fillcolor=yellow style=filled]
+        #{application_nodes.join("\n")}
+      }
+    APPS
+  end
+
+  def render_entity_subgraph
+    <<-ENTITIES
+      subgraph Entities {
+        node [shape=box fillcolor=turquoise style=filled]
+        #{entity_nodes.join("\n")}
+      }
+    ENTITIES
+  end
 
   def application_nodes
     applications = topology.map { |route| [route[:from_app], route[:to_app]] }.flatten.sort.uniq
@@ -52,28 +56,26 @@ class DotFormat
   def entity_nodes
     return [] unless graph_level > APPLICATION_ONLY_LEVEL
     entities = topology.map { |route| route[:entity] }.sort.uniq
-    entities.inject([]) do |list, entity|
-      list << %("#{entity}")
-    end
+    entities.map { |entity| %("#{entity}") }
   end
 
   def message_edges
-    topology.inject([]) do |list, route|
-      qualifier = route[:key][edge_level..-1]&.join('.').to_s
-
-      edge_options = []
-      edge_options << %(label="#{qualifier}")
-      edge_options << %(color="red") if route[:to_app].to_s.empty?
-
-      list << %(#{route_to_path(route)} [#{edge_options.join(' ')}])
-    end.uniq
+    topology.map { |route| %(#{route_path(route)} [#{route_properties(route)}]) }.uniq
   end
 
-  def route_to_path(route)
+  def route_path(route)
     path = []
     path << route[:from_app]
     path << route[:entity] if graph_level > APPLICATION_ONLY_LEVEL
     path << route[:to_app]
     path.map { |text| %("#{text}") }.join('->')
+  end
+
+  def route_properties(route)
+    qualifier = route[:key][edge_level..-1]&.join('.').to_s
+    properties = []
+    properties << %(label="#{qualifier}")
+    properties << %(color="red") if route[:to_app].to_s.empty?
+    properties.join(' ')
   end
 end
