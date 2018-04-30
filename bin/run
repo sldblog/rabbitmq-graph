@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
-require_relative '../app/discover'
+# frozen_string_literal: true
 
-puts Discover.new.to_dot
+require_relative '../app/discover'
+require_relative '../app/dot_format'
+
+topology = Discover.new.topology
+puts DotFormat.new(topology: topology).present
