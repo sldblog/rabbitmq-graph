@@ -47,7 +47,11 @@ Affects the complexity of edges:
 Running the discovery against a dockerised `rabbitmq:3.6-management`:
 
 ```
-$ RABBITMQ_URI=amqp://guest:guest@localhost:5672/ RABBITMQ_API_URI=http://localhost:15672/ bin/run > test.dot
+$ docker run --detach --publish 5672:5672 --publish 15672:15672 rabbitmq:3.6-management
+
+$ RABBITMQ_URI=amqp://guest:guest@localhost:5672/ \
+  RABBITMQ_API_URI=http://localhost:15672/ \
+  bin/run > test.dot
 I, [2018-04-30T13:05:29.717291 #90042]  INFO -- : connecting to rabbitmq (amqp://guest@127.0.0.1:5672/)
 I, [2018-04-30T13:05:29.728500 #90042]  INFO -- : connected to RabbitMQ at 127.0.0.1 as guest
 I, [2018-04-30T13:05:29.728589 #90042]  INFO -- : opening rabbitmq channel with pool size 1, abort on exception false
@@ -55,8 +59,8 @@ I, [2018-04-30T13:05:29.731250 #90042]  INFO -- : using topic exchange 'hutch'
 I, [2018-04-30T13:05:29.734912 #90042]  INFO -- : HTTP API use is enabled
 I, [2018-04-30T13:05:29.735060 #90042]  INFO -- : connecting to rabbitmq HTTP API (http://guest@127.0.0.1:15672/)
 I, [2018-04-30T13:05:29.739998 #90042]  INFO -- : tracing is disabled
-Discovering bindings: |================================================================================================================================================================================|
-Discovering queues: |==================================================================================================================================================================================|
+Discovering bindings: |================================================================================================|
+Discovering queues: |==================================================================================================|
 
 $ dot -O -Tpng test.dot
 $ open test.dot.png
