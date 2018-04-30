@@ -44,21 +44,19 @@ Affects the complexity of edges:
 
 ### Example
 
-Running the discovery against a dockerised `rabbitmq:3.4-management` with dynamic ports:
+Running the discovery against a dockerised `rabbitmq:3.6-management`:
 
 ```
-$ RABBITMQ_API_URI=http://localhost:32888/ RABBITMQ_URI=amqp://guest:guest@localhost:32889/test bin/run | tee test.dot
-I, [2017-03-16T19:59:32.492886 #42089]  INFO -- : connecting to rabbitmq (amqp://guest@localhost:32889/test)
-I, [2017-03-16T19:59:32.501677 #42089]  INFO -- : connected to RabbitMQ at localhost as guest
-I, [2017-03-16T19:59:32.501727 #42089]  INFO -- : opening rabbitmq channel with pool size 1, abort on exception false
-I, [2017-03-16T19:59:32.504461 #42089]  INFO -- : using topic exchange 'hutch'
-I, [2017-03-16T19:59:32.505797 #42089]  INFO -- : HTTP API use is enabled
-I, [2017-03-16T19:59:32.505962 #42089]  INFO -- : connecting to rabbitmq HTTP API (http://guest@localhost:32888/)
-I, [2017-03-16T19:59:32.512098 #42089]  INFO -- : tracing is disabled
-...............................................................digraph G {
-  subgraph Apps {
-    node [shape=hexagon fillcolor=yellow style=filled]
-<snip>
+$ RABBITMQ_URI=amqp://guest:guest@localhost:5672/ RABBITMQ_API_URI=http://localhost:15672/ bin/run > test.dot
+I, [2018-04-30T13:05:29.717291 #90042]  INFO -- : connecting to rabbitmq (amqp://guest@127.0.0.1:5672/)
+I, [2018-04-30T13:05:29.728500 #90042]  INFO -- : connected to RabbitMQ at 127.0.0.1 as guest
+I, [2018-04-30T13:05:29.728589 #90042]  INFO -- : opening rabbitmq channel with pool size 1, abort on exception false
+I, [2018-04-30T13:05:29.731250 #90042]  INFO -- : using topic exchange 'hutch'
+I, [2018-04-30T13:05:29.734912 #90042]  INFO -- : HTTP API use is enabled
+I, [2018-04-30T13:05:29.735060 #90042]  INFO -- : connecting to rabbitmq HTTP API (http://guest@127.0.0.1:15672/)
+I, [2018-04-30T13:05:29.739998 #90042]  INFO -- : tracing is disabled
+Discovering bindings: |================================================================================================================================================================================|
+Discovering queues: |==================================================================================================================================================================================|
 
 $ dot -O -Tpng test.dot
 $ open test.dot.png

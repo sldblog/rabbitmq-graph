@@ -3,4 +3,4 @@
 source 'https://rubygems.org'
 
 gem 'hutch'
-gem 'pry-byebug'
+gem 'ruby-progressbar'

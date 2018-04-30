@@ -3,6 +3,7 @@
 require 'hutch'
 require 'json'
 require 'logger'
+require 'ruby-progressbar'
 require 'uri'
 
 class Discover
@@ -28,19 +29,25 @@ class Discover
   def topology
     items = {}
 
+    binding_progress = ProgressBar.create(title: 'Discovering bindings', total: client.bindings.size, output: $stderr)
     bindings.each do |binding|
-      $stderr.print '.'
+      binding_progress.increment
       queue_name = binding[:queue_name]
       items[queue_name] ||= []
       items[queue_name] << route_from(binding)
     end
+    binding_progress.finish
 
+    queue_progress = ProgressBar.create(title: 'Discovering queues', total: client.queues.size, output: $stderr)
     bound_queues.each do |queue|
-      $stderr.print '.'
-      queue_name = queue[:queue_name]
-      items[queue_name] ||= []
-      items[queue_name].each { |route| route.merge!(route_to(queue)) }
+      queue_progress.increment
+      bound_consumers(queue).each do |consumer|
+        queue_name = consumer[:queue_name]
+        items[queue_name] ||= []
+        items[queue_name].each { |route| route.merge!(route_to(consumer)) }
+      end
     end
+    queue_progress.finish
 
     items.inject([]) do |list, (queue_name, routes)|
       next list unless routes
@@ -60,21 +67,24 @@ class Discover
   attr_reader :client
 
   def bindings
-    @bindings ||= client
-                  .bindings.lazy
-                  .reject { |binding| binding['destination'] == binding['routing_key'] }
-                  .reject { |binding| binding['routing_key'].empty? }
-                  .select { |binding| binding['destination_type'] == 'queue' }
-                  .map    { |binding_data| extract_binding_data(binding_data) }
+    client.bindings.lazy
+          .reject { |binding| binding['destination'] == binding['routing_key'] }
+          .reject { |binding| binding['routing_key'].empty? }
+          .select { |binding| binding['destination_type'] == 'queue' }
+          .map    { |binding_data| extract_binding_data(binding_data) }
   end
 
   def bound_queues
-    @bound_queues ||= client
-                      .queues.lazy
-                      .map      { |queue| queue_data(queue['vhost'], queue['name']) }
-                      .flat_map { |queue| queue['consumer_details'] }
-                      .reject(&:empty?)
-                      .map { |consumer_data| extract_consumer_data(consumer_data) }
+    client.queues.lazy
+          .map { |queue| fetch_queue_data(queue['vhost'], queue['name']) }
+          .map { |queue| queue['consumer_details'] }
+  end
+
+  def bound_consumers(queue_data)
+    queue_data
+      .flatten
+      .reject(&:empty?)
+      .map { |consumer_data| extract_consumer_data(consumer_data) }
   end
 
   def extract_binding_data(binding_data)
@@ -93,7 +103,7 @@ class Discover
     }
   end
 
-  def queue_data(vhost, name)
+  def fetch_queue_data(vhost, name)
     escaped_vhost_path = URI.escape(vhost, %r{/})
     JSON.parse(client.query_api(path: "/queues/#{escaped_vhost_path}/#{name}").body)
   end
