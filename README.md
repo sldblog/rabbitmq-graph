@@ -62,7 +62,7 @@ I, [2018-04-30T13:05:29.739998 #90042]  INFO -- : tracing is disabled
 Discovering bindings: |================================================================================================|
 Discovering queues: |==================================================================================================|
 
-$ dot -O -Tpng test.dot
+$ fdp -O -Tpng test.dot   # assumes "graphviz" is installed
 $ open test.dot.png
 ```
 
