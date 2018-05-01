@@ -12,8 +12,11 @@ require 'uri'
 #  - `consumer_tag`s are set on consumers to the consuming application's name
 #  - bound routing keys are in the format of `application_name.entity_name[.action]+`
 class Discover
-  def initialize(api_url: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'), api_client: nil)
-    Hutch::Logging.logger = Logger.new($stderr)
+  def initialize(api_url: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'),
+                 api_client: nil,
+                 output: $stderr)
+    @output_io = output
+    Hutch::Logging.logger = Logger.new(output_io)
     configure_hutch_http_api(api_url)
     configure_api_client(api_client)
   end
@@ -21,7 +24,7 @@ class Discover
   def topology
     items = {}
 
-    binding_progress = ProgressBar.create(title: 'Discovering bindings', total: client.bindings.size, output: $stderr)
+    binding_progress = ProgressBar.create(title: 'Discovering bindings', total: client.bindings.size, output: output_io)
     bindings.each do |binding|
       binding_progress.increment
       queue_name = binding[:queue_name]
@@ -30,7 +33,7 @@ class Discover
     end
     binding_progress.finish
 
-    queue_progress = ProgressBar.create(title: 'Discovering queues', total: client.queues.size, output: $stderr)
+    queue_progress = ProgressBar.create(title: 'Discovering queues', total: client.queues.size, output: output_io)
     bound_queues.each do |queue|
       queue_progress.increment
       bound_consumers(queue).each do |consumer|
@@ -56,7 +59,7 @@ class Discover
 
   private
 
-  attr_reader :client
+  attr_reader :client, :output_io
 
   def configure_hutch_http_api(api_url)
     parsed_uri = URI(api_url)
