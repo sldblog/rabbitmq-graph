@@ -1,6 +1,7 @@
 # rabbitmq-graph
 
 [![Dependency Status](https://gemnasium.com/badges/github.com/sldblog/rabbitmq-graph.svg)](https://gemnasium.com/github.com/sldblog/rabbitmq-graph)
+[![CircleCI](https://circleci.com/gh/sldblog/rabbitmq-graph.svg?style=svg&circle-token=68531f42debaa4ff5b3bddb62a4672ca2eaabaf4)](https://circleci.com/gh/sldblog/rabbitmq-graph)
 
 Discover RabbitMQ topology.
 
