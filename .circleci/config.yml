@@ -6,7 +6,7 @@ defaults: &defaults
 prepare_environment: &prepare_environment
   run:
     name: Prepare environment
-    command: apk add --no-cache --no-progress build-base git
+    command: apk add --no-cache --no-progress build-base curl git
 
 restore_gems: &restore_gems
   restore_cache:
@@ -43,12 +43,22 @@ jobs:
     steps:
       - *prepare_environment
       - checkout
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
       - *restore_gems
       - *install_gems
       - *cache_gems
       - run:
           name: Run tests
-          command: bundle exec rspec
+          command: |
+            ./cc-test-reporter before-build
+            bundle exec rspec
+            ./cc-test-reporter after-build --coverage-input-type simplecov --exit-code $?
+      - store_artifacts:
+          path: coverage
 
 workflows:
   version: 2

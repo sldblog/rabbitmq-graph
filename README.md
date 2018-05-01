@@ -2,6 +2,8 @@
 
 [![Dependency Status](https://gemnasium.com/badges/github.com/sldblog/rabbitmq-graph.svg)](https://gemnasium.com/github.com/sldblog/rabbitmq-graph)
 [![CircleCI](https://circleci.com/gh/sldblog/rabbitmq-graph.svg?style=svg&circle-token=68531f42debaa4ff5b3bddb62a4672ca2eaabaf4)](https://circleci.com/gh/sldblog/rabbitmq-graph)
+[![Maintainability](https://api.codeclimate.com/v1/badges/146dab10c24b4dd7b75e/maintainability)](https://codeclimate.com/github/sldblog/rabbitmq-graph/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/146dab10c24b4dd7b75e/test_coverage)](https://codeclimate.com/github/sldblog/rabbitmq-graph/test_coverage)
 
 Discover RabbitMQ topology.
 
