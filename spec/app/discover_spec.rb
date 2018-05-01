@@ -56,6 +56,11 @@ RSpec.describe Discover do
       )
     end
 
+    let(:setup_empty_transaction_queue) do
+      queues << { 'name' => 'transaction_queue', 'vhost' => '/' }
+      register_queue_details_call(api_client, '/queues/%2F/transaction_queue', [])
+    end
+
     subject(:topology) { described_class.new(api_client: api_client, output: fake_output).topology }
 
     it 'connects publisher applications to consumer applications via routing keys and consumer tags' do
@@ -72,6 +77,32 @@ RSpec.describe Discover do
       )
     end
 
+    it 'reports routing keys without any consumers as having no consumer applications' do
+      bindings << { 'destination' => 'transaction_queue', 'routing_key' => 'ledger.payment.made',
+                    'destination_type' => 'queue' }
+      setup_empty_transaction_queue
+
+      expect(topology).to contain_exactly(
+        from_app: 'ledger',
+        to_app: '',
+        entity: 'payment',
+        routing_key: %w[ledger payment made],
+        queue_name: 'transaction_queue'
+      )
+    end
+
+    it 'reports queues without routing keys as having no publisher applications' do
+      setup_transaction_queue
+
+      expect(topology).to contain_exactly(
+        from_app: '',
+        to_app: 'payments',
+        entity: '',
+        routing_key: [],
+        queue_name: 'transaction_queue'
+      )
+    end
+
     it 'skips bindings that are circular' do
       bindings << { 'destination' => 'same', 'routing_key' => 'same', 'destination_type' => 'queue' }
       setup_transaction_queue
@@ -80,10 +111,10 @@ RSpec.describe Discover do
     end
 
     it 'skips bindings that do not have routing keys defined' do
-      bindings << { 'destination' => 'unprocessable', 'routing_key' => '', 'destination_type' => 'queue' }
+      bindings << { 'destination' => 'unreachable_queue', 'routing_key' => '', 'destination_type' => 'queue' }
       setup_transaction_queue
 
-      expect(topology).not_to include(hash_including(from_app: ''))
+      expect(topology).not_to include(hash_including(queue_name: 'unreachable_queue'))
     end
 
     it 'skips bindings that do not bind to queues' do

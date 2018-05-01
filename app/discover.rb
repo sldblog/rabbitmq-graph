@@ -22,39 +22,24 @@ class Discover
   end
 
   def topology
-    items = {}
+    all_publishers = discover_routing_keys
+    all_consumers = discover_queues_and_consumers
+    queue_names = all_publishers.keys | all_consumers.keys
 
-    binding_progress = ProgressBar.create(title: 'Discovering bindings', total: client.bindings.size, output: output_io)
-    bindings.each do |binding|
-      binding_progress.increment
-      queue_name = binding[:queue_name]
-      items[queue_name] ||= []
-      items[queue_name] << route_from(binding)
+    queue_names.inject([]) do |result, queue_name|
+      publishers = all_publishers[queue_name] || []
+      publishers << {} if publishers.empty?
+      consumers = all_consumers[queue_name] || []
+      consumers << {} if consumers.empty?
+
+      template = { queue_name: queue_name, from_app: '', to_app: '', entity: '', routing_key: [] }
+      routes = publishers
+               .flat_map { |route| consumers.map { |consumer| route.merge(consumer) } }
+               .map { |route| route.delete_if { |_key, value| value.nil? } }
+               .map { |route| template.merge(route) }
+               .uniq
+      result.concat(routes)
     end
-    binding_progress.finish
-
-    queue_progress = ProgressBar.create(title: 'Discovering queues', total: client.queues.size, output: output_io)
-    bound_queues.each do |queue|
-      queue_progress.increment
-      bound_consumers(queue).each do |consumer|
-        queue_name = consumer[:queue_name]
-        items[queue_name] ||= []
-        items[queue_name].each { |route| route.merge!(route_to(consumer)) }
-      end
-    end
-    queue_progress.finish
-
-    items.inject([]) do |list, (queue_name, routes)|
-      next list unless routes
-      list << routes.map do |route|
-        route[:queue_name] = queue_name
-        route[:routing_key] ||= []
-        route[:to_app] ||= ''
-        route[:from_app] ||= ''
-        route[:entity] ||= ''
-        route
-      end
-    end.flatten
   end
 
   private
@@ -76,6 +61,36 @@ class Discover
     broker = Hutch::Broker.new
     broker.set_up_api_connection
     @client = broker.api_client
+  end
+
+  def discover_routing_keys
+    items = {}
+    ProgressBar.create(title: 'Discovering bindings', total: client.bindings.size, output: output_io).tap do |progress|
+      bindings.each do |mq_binding|
+        queue_name = mq_binding[:queue_name]
+        items[queue_name] ||= []
+        items[queue_name] << route_from(mq_binding)
+        progress.increment
+      end
+      progress.finish
+    end
+    items
+  end
+
+  def discover_queues_and_consumers
+    items = {}
+    ProgressBar.create(title: 'Discovering queues', total: client.queues.size, output: output_io).tap do |progress|
+      bound_queues.each do |queue|
+        bound_consumers(queue).each do |consumer|
+          queue_name = consumer[:queue_name]
+          items[queue_name] ||= []
+          items[queue_name] << route_to(consumer)
+        end
+        progress.increment
+      end
+      progress.finish
+    end
+    items
   end
 
   def bindings
