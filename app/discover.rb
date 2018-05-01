@@ -12,20 +12,10 @@ require 'uri'
 #  - `consumer_tag`s are set on consumers to the consuming application's name
 #  - bound routing keys are in the format of `application_name.entity_name[.action]+`
 class Discover
-  def initialize(api_uri: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'))
-    Hutch::Logging.logger = Logger.new(STDERR)
-
-    URI(api_uri).tap do |parsed_uri|
-      Hutch::Config.set(:mq_api_host, parsed_uri.host)
-      Hutch::Config.set(:mq_username, parsed_uri.user || 'guest')
-      Hutch::Config.set(:mq_password, parsed_uri.password || 'guest')
-      Hutch::Config.set(:mq_api_port, parsed_uri.port || (parsed_uri.scheme == 'https' ? 443 : 15_672))
-      Hutch::Config.set(:mq_api_ssl, parsed_uri.scheme == 'https')
-    end
-
-    broker = Hutch::Broker.new
-    broker.set_up_api_connection
-    @client = broker.api_client
+  def initialize(api_url: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'), api_client: nil)
+    Hutch::Logging.logger = Logger.new($stderr)
+    configure_hutch_http_api(api_url)
+    configure_api_client(api_client)
   end
 
   def topology
@@ -67,6 +57,23 @@ class Discover
   private
 
   attr_reader :client
+
+  def configure_hutch_http_api(api_url)
+    parsed_uri = URI(api_url)
+    Hutch::Config.set(:mq_api_host, parsed_uri.host)
+    Hutch::Config.set(:mq_username, parsed_uri.user || 'guest')
+    Hutch::Config.set(:mq_password, parsed_uri.password || 'guest')
+    Hutch::Config.set(:mq_api_port, parsed_uri.port)
+    Hutch::Config.set(:mq_api_ssl, parsed_uri.scheme == 'https')
+  end
+
+  def configure_api_client(api_client)
+    return @client = api_client if api_client
+
+    broker = Hutch::Broker.new
+    broker.set_up_api_connection
+    @client = broker.api_client
+  end
 
   def bindings
     client.bindings.lazy
