@@ -7,6 +7,7 @@ gem 'ruby-progressbar'
 
 group :code_quality do
   gem 'rubocop'
+  gem 'simplecov'
 end
 
 group :test do
