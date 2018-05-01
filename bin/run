@@ -1,8 +1,11 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative '../app/discover'
-require_relative '../app/dot_format'
+require 'bundler/setup'
+$LOAD_PATH.unshift(Bundler.root) unless $LOAD_PATH.include?(Bundler.root)
+
+require 'app/discover'
+require 'app/dot_format'
 
 topology = Discover.new.topology
 puts DotFormat.new(topology: topology).present

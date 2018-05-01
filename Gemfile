@@ -8,3 +8,7 @@ gem 'ruby-progressbar'
 group :code_quality do
   gem 'rubocop'
 end
+
+group :test do
+  gem 'rspec'
+end

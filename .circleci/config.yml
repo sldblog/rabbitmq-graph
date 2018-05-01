@@ -1,33 +1,58 @@
+defaults: &defaults
+  working_directory: ~/rabbitmq-graph
+  docker:
+    - image: ruby:2.4-alpine3.7
+
+prepare_environment: &prepare_environment
+  run:
+    name: Prepare environment
+    command: apk add --no-cache --no-progress build-base git
+
+restore_gems: &restore_gems
+  restore_cache:
+    keys:
+      - v1-gems-{{ checksum "Gemfile.lock" }}
+      - v1-gems
+
+install_gems: &install_gems
+  run:
+    name: Install dependencies
+    command: bundle check --path=vendor/bundle || bundle install --path=vendor/bundle
+
+cache_gems: &cache_gems
+  save_cache:
+    key: v1-gems-{{ checksum "Gemfile.lock" }}
+    paths:
+     - vendor/bundle
+
 version: 2
 jobs:
   rubocop:
-    working_directory: ~/rabbitmq-graph
-    docker:
-      - image: ruby:2.4-alpine3.7
+    <<: *defaults
     steps:
-      - run:
-          name: Prepare environment
-          command: apk add --no-cache --no-progress build-base git
+      - *prepare_environment
       - checkout
-
-      - restore_cache:
-          keys:
-            - v1-gems-{{ checksum "Gemfile.lock" }}
-            - v1-gems
+      - *restore_gems
+      - *install_gems
+      - *cache_gems
       - run:
-          name: Install dependencies
-          command: bundle check --path=vendor/bundle || bundle install --path=vendor/bundle
-      - save_cache:
-         key: v1-gems-{{ checksum "Gemfile.lock" }}
-         paths:
-           - vendor/bundle
-
-      - run:
-          name: Run linter
+          name: Run rubocop
           command: bundle exec rubocop
+  tests:
+    <<: *defaults
+    steps:
+      - *prepare_environment
+      - checkout
+      - *restore_gems
+      - *install_gems
+      - *cache_gems
+      - run:
+          name: Run tests
+          command: bundle exec rspec
 
 workflows:
   version: 2
   build:
     jobs:
       - rubocop
+      - tests
