@@ -48,10 +48,10 @@ class Discover
       next list unless routes
       list << routes.map do |route|
         route[:queue_name] = queue_name
+        route[:routing_key] ||= []
         route[:to_app] ||= ''
         route[:from_app] ||= ''
         route[:entity] ||= ''
-        route[:key] ||= []
         route
       end
     end.flatten
@@ -130,7 +130,7 @@ class Discover
 
   def route_from(binding)
     key = binding[:routing_key].split('.')
-    { key: key, from_app: key[0], entity: key[1] }
+    { routing_key: key, from_app: key[0], entity: key[1] }
   end
 
   def route_to(queue)

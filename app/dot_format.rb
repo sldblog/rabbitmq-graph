@@ -73,7 +73,7 @@ class DotFormat
   end
 
   def route_properties(route)
-    qualifier = route[:key][edge_level..-1]&.join('.').to_s
+    qualifier = route[:routing_key][edge_level..-1]&.join('.').to_s
     properties = []
     properties << %(label="#{qualifier}")
     properties << %(color="red") if route[:to_app].to_s.empty?
