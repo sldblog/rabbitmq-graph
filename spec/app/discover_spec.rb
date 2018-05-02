@@ -72,7 +72,7 @@ RSpec.describe Discover do
         from_app: 'ledger',
         to_app: 'payments',
         entity: 'payment',
-        routing_key: %w[ledger payment made],
+        actions: %w[made],
         queue_name: 'transaction_queue'
       )
     end
@@ -86,7 +86,7 @@ RSpec.describe Discover do
         from_app: 'ledger',
         to_app: '',
         entity: 'payment',
-        routing_key: %w[ledger payment made],
+        actions: %w[made],
         queue_name: 'transaction_queue'
       )
     end
@@ -98,7 +98,7 @@ RSpec.describe Discover do
         from_app: '',
         to_app: 'payments',
         entity: '',
-        routing_key: [],
+        actions: [],
         queue_name: 'transaction_queue'
       )
     end

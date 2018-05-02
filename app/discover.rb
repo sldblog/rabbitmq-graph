@@ -32,7 +32,7 @@ class Discover
       consumers = all_consumers[queue_name] || []
       consumers << {} if consumers.empty?
 
-      template = { queue_name: queue_name, from_app: '', to_app: '', entity: '', routing_key: [] }
+      template = { queue_name: queue_name, from_app: '', to_app: '', entity: '', actions: [] }
       routes = publishers
                .flat_map { |route| consumers.map { |consumer| route.merge(consumer) } }
                .map { |route| route.delete_if { |_key, value| value.nil? } }
@@ -145,7 +145,7 @@ class Discover
 
   def route_from(binding)
     key = binding[:routing_key].split('.')
-    { routing_key: key, from_app: key[0], entity: key[1] }
+    { from_app: key[0], entity: key[1], actions: key[2..-1] }
   end
 
   def route_to(queue)

@@ -2,15 +2,10 @@
 
 # Presents a RabbitMQ topology in graphviz's .dot format
 class DotFormat
-  APPLICATION_ONLY_LEVEL = 1
-  HIGHEST_LEVEL = 2
-
-  def initialize(topology:,
-                 graph_level: ENV.fetch('LEVEL', HIGHEST_LEVEL).to_i,
-                 edge_level: ENV.fetch('EDGE_LEVEL', HIGHEST_LEVEL).to_i)
+  def initialize(topology:, show_entities: true, label_detail: %i[actions])
     @topology = topology
-    @graph_level = graph_level
-    @edge_level = edge_level
+    @show_entities = show_entities
+    @label_detail = label_detail
   end
 
   def present
@@ -25,7 +20,7 @@ class DotFormat
 
   private
 
-  attr_reader :topology, :graph_level, :edge_level
+  attr_reader :topology, :show_entities, :label_detail
 
   def render_application_subgraph
     <<-APPS
@@ -47,15 +42,15 @@ class DotFormat
 
   def application_nodes
     applications = topology.map { |route| [route[:from_app], route[:to_app]] }.flatten.sort.uniq
-    applications.inject([]) do |list, app|
-      label = %("#{app}")
-      label += ' [fillcolor=red]' if app.empty?
-      list << label
+    applications.map do |app|
+      properties = []
+      properties << 'fillcolor=red' if app_missing?(app)
+      %("#{app}" [#{properties.join(' ')}])
     end
   end
 
   def entity_nodes
-    return [] unless graph_level > APPLICATION_ONLY_LEVEL
+    return [] unless show_entities
     entities = topology.map { |route| route[:entity] }.sort.uniq
     entities.map { |entity| %("#{entity}") }
   end
@@ -67,16 +62,20 @@ class DotFormat
   def route_path(route)
     path = []
     path << route[:from_app]
-    path << route[:entity] if graph_level > APPLICATION_ONLY_LEVEL
+    path << route[:entity] if show_entities
     path << route[:to_app]
     path.map { |text| %("#{text}") }.join('->')
   end
 
   def route_properties(route)
-    qualifier = route[:routing_key][edge_level..-1]&.join('.').to_s
+    label = label_detail.map { |detail| route[detail] }.join('.').to_s
     properties = []
-    properties << %(label="#{qualifier}")
-    properties << %(color="red") if route[:to_app].to_s.empty?
+    properties << %(label="#{label}")
+    properties << %(color="red") if app_missing?(route[:to_app])
     properties.join(' ')
+  end
+
+  def app_missing?(app)
+    app.to_s.empty?
   end
 end
