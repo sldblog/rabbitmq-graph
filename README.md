@@ -10,39 +10,42 @@ Discover RabbitMQ topology.
 ## Assumptions
 
 - Routing keys are segmented with dots (`.`).
-    - The first segment is assumed to be the source application.  
-      Example: `splitter.experiment.something.assigned` &rarr; `splitter` is the application publishing the message.
-    - The second segment is assumed to be the entity.  
-      Example: `splitter.experiment.something.assigned` &rarr; `experiment` is the entity being actioned.
-    - The rest of the segments is assumed to be the action.  
-      Example: `splitter.experiment.something.assigned` &rarr; `something.assigned` is the action.
+
+  | Segment name | Routing key | Extracted | Assumed to be |
+  | --- | --- | --- | --- |
+  | from\_app | **splitter**.experiment.something.assigned | splitted | The name of the publishing application. |
+  | entity | splitter.**experiment**.something.assigned | experiment | The entity that is participating in the action. |
+  | actions | splitter.experiment.**something.assigned** | something.assigned | The action(s) describing the event. |
+
 - [Consumer tags][hutch-consumer-tag-pr] are configured to contain the name of the consuming application.
 
 ## How to run?
 
-Without arguments `bin/run` will connect to `localhost:5672` and `localhost:15672` with the default guest user.
+Without arguments `bin/run` will connect to `localhost:15672` with the default guest user.
 
 ### Configuration
 
 | Setting | Environment variable | Effect | Default |
 | ------- | -------------------- | ------ | ------- |
-| Graph level | `LEVEL` | Sets the complexity level of the graph. | 2 |
-| Edge level | `EDGE_LEVEL` | Sets the complexity level of edges. | 2 |
+| Show entities | `SHOW_ENTITIES` | Toggles displaying entities in the generated graph. | `'true'` |
+| Label details | `LABEL_DETAIL` | Comma separated segment names to display on labels drawn between applications and/or entities. | `'actions'` |
 | RabbitMQ management URL | `RABBITMQ_API_URI` | Specifies the connection URL to RabbitMQ management API | `http://guest:guest@localhost:15672/` |
 
-### Graph level
+### Show entities
 
-- **1**: will only show application to application relations. Edge labels will display the rest of the routing key beyond application part.
-- **2**: will show application to entity to application relations. Edge labels will display the routing key beyond entity part.
+- **false**: will only show application to application relations.
+- **true**: will show application to entity to application relations. The edge going into the entity and coming out of the entity will have the same label.
 
-### Edge level
+### Label details
 
-Affects the complexity of edges:
+Affects the labeling of edges:
 
-- **0**: displays the full routing key per edge
-- **1**: displays `entity.[rest.]*.action` as label per edge
-- **2**: displays `[rest.]*.action` as label per edge
-- _high number_: does not display labels. Effectively means it reduces number of edges to 1 between nodes.
+- `'entity,actions'`: displays the entity name and the actions on the edge.
+- `'entity'`: displays the entity name on the edge.
+- `'actions'`: displays the actions on the edge.
+- `''` (empty string): displays no labels.
+
+Any combination and order of the above is allowed.
 
 ### Example
 
