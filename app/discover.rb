@@ -99,9 +99,9 @@ class Discover
 
   def bindings
     client.bindings.lazy
-          .reject { |binding| binding['destination'] == binding['routing_key'] }
-          .reject { |binding| binding['routing_key'].empty? }
           .select { |binding| binding['destination_type'] == 'queue' }
+          .reject { |binding| binding['routing_key'].empty? }
+          .reject { |binding| binding['source'].empty? }
           .map    { |binding_data| extract_binding_data(binding_data) }
   end
 
