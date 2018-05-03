@@ -25,7 +25,7 @@ class DotFormat
   def render_application_subgraph
     <<-APPS
       subgraph Apps {
-        node [shape=hexagon fillcolor=yellow style=filled]
+        node [shape=oval fillcolor=yellow style=filled]
         #{application_nodes.join("\n")}
       }
     APPS
