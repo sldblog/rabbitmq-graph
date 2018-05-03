@@ -32,6 +32,7 @@ class DotFormat
   end
 
   def render_entity_subgraph
+    return '' unless show_entities
     <<-ENTITIES
       subgraph Entities {
         node [shape=box fillcolor=turquoise style=filled]
@@ -50,7 +51,6 @@ class DotFormat
   end
 
   def entity_nodes
-    return [] unless show_entities
     entities = topology.map { |route| route[:entity] }.sort.uniq
     entities.map { |entity| %("#{entity}") }
   end
@@ -71,7 +71,7 @@ class DotFormat
     label = label_detail.map { |detail| route[detail] }.join('.').to_s
     properties = []
     properties << %(label="#{label}")
-    properties << %(color="red") if app_missing?(route[:to_app])
+    properties << %(color="red") if app_missing?(route[:to_app]) || app_missing?(route[:from_app])
     properties.join(' ')
   end
 
