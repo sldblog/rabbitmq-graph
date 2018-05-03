@@ -7,6 +7,8 @@ $LOAD_PATH.unshift(Bundler.root) unless $LOAD_PATH.include?(Bundler.root)
 require 'app/discover'
 require 'app/dot_format'
 
+topology = Discover.new.topology
+
 show_entities = ENV.fetch('SHOW_ENTITIES', 'true') == 'true'
 label_detail = ENV.fetch('LABEL_DETAIL', 'actions').to_s.split(',').map(&:strip).reject(&:empty?).map(&:to_sym)
 puts DotFormat.new(topology: topology, show_entities: show_entities, label_detail: label_detail).present
