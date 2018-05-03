@@ -97,31 +97,45 @@ RSpec.describe DotFormat do
       end
     end
 
+    describe 'when an application has a default name' do
+      let(:topology) do
+        [{ from_app: 'demo', to_app: Discover::DEFAULT_CONSUMER_TAG, entity: 'entity', actions: %w[action] }]
+      end
+
+      it 'shows the default application node with orange colour' do
+        expect(application_subgraph).to include(%("<default-consumer-tag>" [fillcolor="orange"]\n))
+      end
+
+      it 'shows regular edges' do
+        expect(present).to include(%("demo"->"entity"->"<default-consumer-tag>" [label="action"]\n))
+      end
+    end
+
     describe 'when a queue with a routing key has no consumer applications' do
       let(:topology) do
-        [{ from_app: 'no_consumers', to_app: '', entity: 'entity', actions: %w[action] }]
+        [{ from_app: 'no_consumers', to_app: Discover::MISSING_CONSUMER_TAG, entity: 'entity', actions: %w[action] }]
       end
 
       it 'shows the missing application node with red colour' do
-        expect(application_subgraph).to include(%("" [fillcolor=red]\n))
+        expect(application_subgraph).to include(%("<no-consumers>" [fillcolor="red"]\n))
       end
 
       it 'shows edges without consumers with red colour' do
-        expect(present).to include(%("no_consumers"->"entity"->"" [label="action" color="red"]\n))
+        expect(present).to include(%("no_consumers"->"entity"->"<no-consumers>" [label="action" color="red"]\n))
       end
     end
 
     describe 'when a queue has no routing keys bound' do
       let(:topology) do
-        [{ from_app: '', to_app: 'no_routes', entity: 'entity', actions: %w[action] }]
+        [{ from_app: Discover::MISSING_BINDING_TAG, to_app: 'no_routes', entity: 'entity', actions: %w[action] }]
       end
 
       it 'shows the missing application node with red colour' do
-        expect(application_subgraph).to include(%("" [fillcolor=red]\n))
+        expect(application_subgraph).to include(%("<no-routing-key-binding>" [fillcolor="red"]\n))
       end
 
       it 'shows edges without consumers with red colour' do
-        expect(present).to include(%(""->"entity"->"no_routes" [label="action" color="red"]\n))
+        expect(present).to include(%("<no-routing-key-binding>"->"entity"->"no_routes" [label="action" color="red"]\n))
       end
     end
   end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'app/discover'
+
 # Presents a RabbitMQ topology in graphviz's .dot format
 class DotFormat
   def initialize(topology:, show_entities: true, label_detail: %i[actions])
@@ -45,7 +47,8 @@ class DotFormat
     applications = topology.map { |route| [route[:from_app], route[:to_app]] }.flatten.sort.uniq
     applications.map do |app|
       properties = []
-      properties << 'fillcolor=red' if app_missing?(app)
+      properties << 'fillcolor="red"' if app_missing?(app)
+      properties << 'fillcolor="orange"' if default_tag?(app)
       %("#{app}" [#{properties.join(' ')}])
     end
   end
@@ -76,6 +79,10 @@ class DotFormat
   end
 
   def app_missing?(app)
-    app.to_s.empty?
+    [Discover::MISSING_CONSUMER_TAG, Discover::MISSING_BINDING_TAG].include? app.to_s
+  end
+
+  def default_tag?(app)
+    app.to_s == Discover::DEFAULT_CONSUMER_TAG
   end
 end

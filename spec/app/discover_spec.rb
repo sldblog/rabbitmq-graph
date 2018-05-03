@@ -84,18 +84,18 @@ RSpec.describe Discover do
 
       expect(topology).to contain_exactly(
         from_app: 'ledger',
-        to_app: '',
+        to_app: '<no-consumers>',
         entity: 'payment',
         actions: %w[made],
         queue_name: 'transaction_queue'
       )
     end
 
-    it 'reports queues without routing keys as having no publisher applications' do
+    it 'reports queues without routing keys as having no routing key bindings' do
       setup_transaction_queue
 
       expect(topology).to contain_exactly(
-        from_app: '',
+        from_app: '<no-routing-key-binding>',
         to_app: 'payments',
         entity: '',
         actions: [],
