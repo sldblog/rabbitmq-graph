@@ -12,9 +12,12 @@ require 'uri'
 #  - `consumer_tag`s are set on consumers to the consuming application's name
 #  - bound routing keys are in the format of `application_name.entity_name[.action]+`
 class Discover
+  DEFAULT_CONSUMER_TAG = '<default-consumer-tag>'
+  MISSING_CONSUMER_TAG = '<no-consumers>'
+  MISSING_BINDING_TAG = '<no-routing-key-binding>'
+
   def initialize(api_url: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'),
-                 api_client: nil,
-                 output: $stderr)
+                 api_client: nil, output: $stderr)
     @output_io = output
     Hutch::Logging.logger = Logger.new(output_io)
     configure_hutch_http_api(api_url)
@@ -32,7 +35,8 @@ class Discover
       consumers = all_consumers[queue_name] || []
       consumers << {} if consumers.empty?
 
-      template = { queue_name: queue_name, from_app: '', to_app: '', entity: '', actions: [] }
+      template = { queue_name: queue_name, from_app: MISSING_BINDING_TAG, to_app: MISSING_CONSUMER_TAG,
+                   entity: '', actions: [] }
       routes = publishers
                .flat_map { |route| consumers.map { |consumer| route.merge(consumer) } }
                .map { |route| route.delete_if { |_key, value| value.nil? } }
@@ -95,9 +99,9 @@ class Discover
 
   def bindings
     client.bindings.lazy
-          .reject { |binding| binding['destination'] == binding['routing_key'] }
-          .reject { |binding| binding['routing_key'].empty? }
           .select { |binding| binding['destination_type'] == 'queue' }
+          .reject { |binding| binding['routing_key'].empty? }
+          .reject { |binding| binding['source'].empty? }
           .map    { |binding_data| extract_binding_data(binding_data) }
   end
 
@@ -136,8 +140,7 @@ class Discover
   end
 
   def consumer_to_application_name(tag)
-    return 'ruby' if tag =~ /^bunny-/ || tag =~ /^hutch-/
-    return 'jvm' if tag =~ /^amq\.ctag/
+    return DEFAULT_CONSUMER_TAG if tag =~ /^bunny-/ || tag =~ /^hutch-/ || tag =~ /^amq\.ctag/
     return tag.split('-')[0..-6].join('-') if tag =~ /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     return tag.split('-')[0..-3].join('-') if tag =~ /[0-9]+-[0-9]+$/
     tag

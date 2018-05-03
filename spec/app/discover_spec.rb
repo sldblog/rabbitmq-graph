@@ -64,8 +64,8 @@ RSpec.describe Discover do
     subject(:topology) { described_class.new(api_client: api_client, output: fake_output).topology }
 
     it 'connects publisher applications to consumer applications via routing keys and consumer tags' do
-      bindings << { 'destination' => 'transaction_queue', 'routing_key' => 'ledger.payment.made',
-                    'destination_type' => 'queue' }
+      bindings << { 'source' => 'standard', 'destination' => 'transaction_queue',
+                    'routing_key' => 'ledger.payment.made', 'destination_type' => 'queue' }
       setup_transaction_queue
 
       expect(topology).to contain_exactly(
@@ -78,24 +78,24 @@ RSpec.describe Discover do
     end
 
     it 'reports routing keys without any consumers as having no consumer applications' do
-      bindings << { 'destination' => 'transaction_queue', 'routing_key' => 'ledger.payment.made',
-                    'destination_type' => 'queue' }
+      bindings << { 'source' => 'standard', 'destination' => 'transaction_queue',
+                    'routing_key' => 'ledger.payment.made', 'destination_type' => 'queue' }
       setup_empty_transaction_queue
 
       expect(topology).to contain_exactly(
         from_app: 'ledger',
-        to_app: '',
+        to_app: '<no-consumers>',
         entity: 'payment',
         actions: %w[made],
         queue_name: 'transaction_queue'
       )
     end
 
-    it 'reports queues without routing keys as having no publisher applications' do
+    it 'reports queues without routing keys as having no routing key bindings' do
       setup_transaction_queue
 
       expect(topology).to contain_exactly(
-        from_app: '',
+        from_app: '<no-routing-key-binding>',
         to_app: 'payments',
         entity: '',
         actions: [],
@@ -103,22 +103,25 @@ RSpec.describe Discover do
       )
     end
 
-    it 'skips bindings that are circular' do
-      bindings << { 'destination' => 'same', 'routing_key' => 'same', 'destination_type' => 'queue' }
+    it 'skips bindings that do not have a source' do
+      bindings << { 'source' => '', 'destination' => 'nosource', 'routing_key' => 'nosource',
+                    'destination_type' => 'queue' }
       setup_transaction_queue
 
-      expect(topology).not_to include(hash_including(from_app: 'same'))
+      expect(topology).not_to include(hash_including(from_app: 'nosource'))
     end
 
     it 'skips bindings that do not have routing keys defined' do
-      bindings << { 'destination' => 'unreachable_queue', 'routing_key' => '', 'destination_type' => 'queue' }
+      bindings << { 'source' => 'standard', 'destination' => 'unreachable_queue', 'routing_key' => '',
+                    'destination_type' => 'queue' }
       setup_transaction_queue
 
       expect(topology).not_to include(hash_including(queue_name: 'unreachable_queue'))
     end
 
     it 'skips bindings that do not bind to queues' do
-      bindings << { 'destination' => '???', 'routing_key' => 'unknown_routing', 'destination_type' => 'unknown' }
+      bindings << { 'source' => 'standard', 'destination' => '???', 'routing_key' => 'unknown_routing',
+                    'destination_type' => 'unknown' }
       setup_transaction_queue
 
       expect(topology).not_to include(hash_including(from_app: 'unknown_routing'))
