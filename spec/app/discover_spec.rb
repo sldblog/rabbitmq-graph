@@ -48,10 +48,8 @@ RSpec.describe Discover do
         api_client,
         '/queues/%2F/transaction_queue',
         [
-          { 'consumer_tag' => 'payments-6f6924a1-9cbb-4add-b62c-441e36a9ff30',
-            'queue' => { 'vhost' => '/', 'name' => 'transaction_queue' } },
-          { 'consumer_tag' => 'payments-6701018f-12c8-445a-a8a5-5e80704d9b49',
-            'queue' => { 'vhost' => '/', 'name' => 'transaction_queue' } }
+          { 'consumer_tag' => 'payments-1', 'queue' => { 'vhost' => '/', 'name' => 'transaction_queue' } },
+          { 'consumer_tag' => 'payments-2', 'queue' => { 'vhost' => '/', 'name' => 'transaction_queue' } }
         ]
       )
     end
@@ -63,43 +61,33 @@ RSpec.describe Discover do
 
     subject(:topology) { described_class.new(api_client: api_client, output: fake_output).topology }
 
-    it 'connects publisher applications to consumer applications via routing keys and consumer tags' do
+    it 'reports all consumer tags for each routing key in each queue' do
       bindings << { 'source' => 'standard', 'destination' => 'transaction_queue',
                     'routing_key' => 'ledger.payment.made', 'destination_type' => 'queue' }
       setup_transaction_queue
 
       expect(topology).to contain_exactly(
-        from_app: 'ledger',
-        to_app: 'payments',
-        entity: 'payment',
-        actions: %w[made],
-        queue_name: 'transaction_queue'
+        Route.new(queue_name: 'transaction_queue', routing_key: 'ledger.payment.made', consumer_tag: 'payments-1'),
+        Route.new(queue_name: 'transaction_queue', routing_key: 'ledger.payment.made', consumer_tag: 'payments-2')
       )
     end
 
-    it 'reports routing keys without any consumers as having no consumer applications' do
+    it 'reports queues without consumers as empty consumer tags for each routing key in each queue' do
       bindings << { 'source' => 'standard', 'destination' => 'transaction_queue',
                     'routing_key' => 'ledger.payment.made', 'destination_type' => 'queue' }
       setup_empty_transaction_queue
 
       expect(topology).to contain_exactly(
-        from_app: 'ledger',
-        to_app: '<no-consumers>',
-        entity: 'payment',
-        actions: %w[made],
-        queue_name: 'transaction_queue'
+        Route.new(queue_name: 'transaction_queue', routing_key: 'ledger.payment.made', consumer_tag: nil)
       )
     end
 
-    it 'reports queues without routing keys as having no routing key bindings' do
+    it 'reports queues without routing key bindings as empty routing keys for each queue and consumer tag' do
       setup_transaction_queue
 
       expect(topology).to contain_exactly(
-        from_app: '<no-routing-key-binding>',
-        to_app: 'payments',
-        entity: '',
-        actions: [],
-        queue_name: 'transaction_queue'
+        Route.new(queue_name: 'transaction_queue', routing_key: '', consumer_tag: 'payments-1'),
+        Route.new(queue_name: 'transaction_queue', routing_key: '', consumer_tag: 'payments-2')
       )
     end
 
@@ -108,7 +96,7 @@ RSpec.describe Discover do
                     'destination_type' => 'queue' }
       setup_transaction_queue
 
-      expect(topology).not_to include(hash_including(from_app: 'nosource'))
+      expect(topology.map(&:to_h)).not_to include(hash_including(routing_key: 'nosource'))
     end
 
     it 'skips bindings that do not have routing keys defined' do
@@ -116,7 +104,7 @@ RSpec.describe Discover do
                     'destination_type' => 'queue' }
       setup_transaction_queue
 
-      expect(topology).not_to include(hash_including(queue_name: 'unreachable_queue'))
+      expect(topology.map(&:to_h)).not_to include(hash_including(queue_name: 'unreachable_queue'))
     end
 
     it 'skips bindings that do not bind to queues' do
@@ -124,7 +112,7 @@ RSpec.describe Discover do
                     'destination_type' => 'unknown' }
       setup_transaction_queue
 
-      expect(topology).not_to include(hash_including(from_app: 'unknown_routing'))
+      expect(topology.map(&:to_h)).not_to include(hash_including(routing_key: 'unknown_routing'))
     end
   end
 end

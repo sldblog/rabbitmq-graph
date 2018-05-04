@@ -5,6 +5,7 @@ require 'json'
 require 'logger'
 require 'ruby-progressbar'
 require 'uri'
+require 'app/route'
 
 # Using RabbitMQ's HTTP management API, discovers the server's publisher/subscriber topology.
 #
@@ -12,10 +13,6 @@ require 'uri'
 #  - `consumer_tag`s are set on consumers to the consuming application's name
 #  - bound routing keys are in the format of `application_name.entity_name[.action]+`
 class Discover
-  DEFAULT_CONSUMER_TAG = '<default-consumer-tag>'
-  MISSING_CONSUMER_TAG = '<no-consumers>'
-  MISSING_BINDING_TAG = '<no-routing-key-binding>'
-
   def initialize(api_url: ENV.fetch('RABBITMQ_API_URI', 'http://guest:guest@localhost:15672/'),
                  api_client: nil, output: $stderr)
     @output_io = output
@@ -35,12 +32,10 @@ class Discover
       consumers = all_consumers[queue_name] || []
       consumers << {} if consumers.empty?
 
-      template = { queue_name: queue_name, from_app: MISSING_BINDING_TAG, to_app: MISSING_CONSUMER_TAG,
-                   entity: '', actions: [] }
       routes = publishers
                .flat_map { |route| consumers.map { |consumer| route.merge(consumer) } }
                .map { |route| route.delete_if { |_key, value| value.nil? } }
-               .map { |route| template.merge(route) }
+               .map { |route| Route.new(route.merge(queue_name: queue_name)) }
                .uniq
       result.concat(routes)
     end
@@ -73,7 +68,7 @@ class Discover
       bindings.each do |mq_binding|
         queue_name = mq_binding[:queue_name]
         items[queue_name] ||= []
-        items[queue_name] << route_from(mq_binding)
+        items[queue_name] << { routing_key: mq_binding[:routing_key] }
         progress.increment
       end
       progress.finish
@@ -88,7 +83,7 @@ class Discover
         bound_consumers(queue).each do |consumer|
           queue_name = consumer[:queue_name]
           items[queue_name] ||= []
-          items[queue_name] << route_to(consumer)
+          items[queue_name] << { consumer_tag: consumer[:consumer] }
         end
         progress.increment
       end
@@ -137,21 +132,5 @@ class Discover
   def fetch_queue_data(vhost, name)
     escaped_vhost_path = URI.encode_www_form_component(vhost)
     JSON.parse(client.query_api(path: "/queues/#{escaped_vhost_path}/#{name}").body)
-  end
-
-  def consumer_to_application_name(tag)
-    return DEFAULT_CONSUMER_TAG if tag =~ /^bunny-/ || tag =~ /^hutch-/ || tag =~ /^amq\.ctag/
-    return tag.split('-')[0..-6].join('-') if tag =~ /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    return tag.split('-')[0..-3].join('-') if tag =~ /[0-9]+-[0-9]+$/
-    tag
-  end
-
-  def route_from(binding)
-    key = binding[:routing_key].split('.')
-    { from_app: key[0], entity: key[1], actions: key[2..-1] }
-  end
-
-  def route_to(queue)
-    { to_app: consumer_to_application_name(queue[:consumer]) }
   end
 end

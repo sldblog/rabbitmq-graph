@@ -2,15 +2,27 @@
 
 require 'spec_helper'
 require 'app/dot_format'
+require 'app/route'
 
 RSpec.describe DotFormat do
   describe '#present' do
     let(:show_entities) { true }
     let(:label_detail) { %i[actions] }
 
+    def route(data, missing_source: false, missing_target: false, default_consumer_tag: false)
+      stubs = {
+        missing_source?: missing_source,
+        missing_target?: missing_target,
+        default_consumer_tag?: default_consumer_tag,
+        entity: '',
+        actions: []
+      }.merge(data)
+      instance_double(Route, stubs)
+    end
+
     let(:topology) do
-      [{ from_app: 'from', to_app: 'to', entity: 'thing', actions: %w[happened] },
-       { from_app: 'from', to_app: 'another', entity: 'clowns', actions: %w[coming fast] }]
+      [route(source_app: 'from', target_app: 'to', entity: 'thing', actions: %w[happened]),
+       route(source_app: 'from', target_app: 'another', entity: 'clowns', actions: %w[coming fast])]
     end
 
     subject(:present) do
@@ -97,45 +109,48 @@ RSpec.describe DotFormat do
       end
     end
 
-    describe 'when an application has a default name' do
+    describe 'when a consumer has a default name' do
       let(:topology) do
-        [{ from_app: 'demo', to_app: Discover::DEFAULT_CONSUMER_TAG, entity: 'entity', actions: %w[action] }]
+        [route(source_app: 'demo', target_app: 'default', entity: 'entity', actions: %w[action],
+               default_consumer_tag?: true)]
       end
 
       it 'shows the default application node with orange colour' do
-        expect(application_subgraph).to include(%("<default-consumer-tag>" [fillcolor="orange"]\n))
+        expect(application_subgraph).to include(%("default" [fillcolor="orange"]\n))
       end
 
       it 'shows regular edges' do
-        expect(present).to include(%("demo"->"entity"->"<default-consumer-tag>" [label="action"]\n))
+        expect(present).to include(%("demo"->"entity"->"default" [label="action"]\n))
       end
     end
 
     describe 'when a queue with a routing key has no consumer applications' do
       let(:topology) do
-        [{ from_app: 'no_consumers', to_app: Discover::MISSING_CONSUMER_TAG, entity: 'entity', actions: %w[action] }]
+        [route(source_app: 'connected_part', target_app: 'none', entity: 'entity', actions: %w[action],
+               missing_target?: true)]
       end
 
-      it 'shows the missing application node with red colour' do
-        expect(application_subgraph).to include(%("<no-consumers>" [fillcolor="red"]\n))
+      it 'shows the disconnected node with red colour' do
+        expect(application_subgraph).to include(%("none" [fillcolor="red"]\n))
       end
 
       it 'shows edges without consumers with red colour' do
-        expect(present).to include(%("no_consumers"->"entity"->"<no-consumers>" [label="action" color="red"]\n))
+        expect(present).to include(%("connected_part"->"entity"->"none" [label="action" color="red"]\n))
       end
     end
 
     describe 'when a queue has no routing keys bound' do
       let(:topology) do
-        [{ from_app: Discover::MISSING_BINDING_TAG, to_app: 'no_routes', entity: 'entity', actions: %w[action] }]
+        [route(source_app: 'none', target_app: 'connected_part', entity: '', actions: [],
+               missing_source?: true)]
       end
 
       it 'shows the missing application node with red colour' do
-        expect(application_subgraph).to include(%("<no-routing-key-binding>" [fillcolor="red"]\n))
+        expect(application_subgraph).to include(%("none" [fillcolor="red"]\n))
       end
 
       it 'shows edges without consumers with red colour' do
-        expect(present).to include(%("<no-routing-key-binding>"->"entity"->"no_routes" [label="action" color="red"]\n))
+        expect(present).to include(%("none"->""->"connected_part" [label="" color="red"]\n))
       end
     end
   end

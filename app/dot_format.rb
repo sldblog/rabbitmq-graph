@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'app/discover'
+require 'set'
 
 # Presents a RabbitMQ topology in graphviz's .dot format
 class DotFormat
@@ -44,17 +44,20 @@ class DotFormat
   end
 
   def application_nodes
-    applications = topology.map { |route| [route[:from_app], route[:to_app]] }.flatten.sort.uniq
-    applications.map do |app|
-      properties = []
-      properties << 'fillcolor="red"' if app_missing?(app)
-      properties << 'fillcolor="orange"' if default_tag?(app)
-      %("#{app}" [#{properties.join(' ')}])
+    applications = {}
+    topology.each do |route|
+      applications[route.source_app] ||= Set.new
+      applications[route.source_app] << 'fillcolor="red"' if route.missing_source?
+
+      applications[route.target_app] ||= Set.new
+      applications[route.target_app] << 'fillcolor="red"' if route.missing_target?
+      applications[route.target_app] << 'fillcolor="orange"' if route.default_consumer_tag?
     end
+    applications.map { |name, properties| %("#{name}" [#{properties.to_a.join(' ')}]) }.sort
   end
 
   def entity_nodes
-    entities = topology.map { |route| route[:entity] }.sort.uniq
+    entities = topology.map(&:entity).sort.uniq
     entities.map { |entity| %("#{entity}") }
   end
 
@@ -64,25 +67,19 @@ class DotFormat
 
   def route_path(route)
     path = []
-    path << route[:from_app]
-    path << route[:entity] if show_entities
-    path << route[:to_app]
+    path << route.source_app
+    path << route.entity if show_entities
+    path << route.target_app
     path.map { |text| %("#{text}") }.join('->')
   end
 
   def route_properties(route)
-    label = label_detail.map { |detail| route[detail] }.join('.').to_s
+    label = label_detail.select { |detail| route.respond_to?(detail) }
+                        .map { |detail| route.public_send(detail) }
+                        .flatten.join('.')
     properties = []
     properties << %(label="#{label}")
-    properties << %(color="red") if app_missing?(route[:to_app]) || app_missing?(route[:from_app])
+    properties << %(color="red") if route.missing_source? || route.missing_target?
     properties.join(' ')
-  end
-
-  def app_missing?(app)
-    [Discover::MISSING_CONSUMER_TAG, Discover::MISSING_BINDING_TAG].include? app.to_s
-  end
-
-  def default_tag?(app)
-    app.to_s == Discover::DEFAULT_CONSUMER_TAG
   end
 end
