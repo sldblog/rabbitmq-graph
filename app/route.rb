@@ -2,9 +2,9 @@
 
 # Extracts publisher/consumer application names and routing key fragments from routing data
 class Route
-  DEFAULT_CONSUMER_TAG = '<default-consumer-tag>'
-  MISSING_SOURCE_LABEL = '<no-routing-key-binding>'
-  MISSING_TARGET_LABEL = '<no-consumers>'
+  DEFAULT_CONSUMER_TAG = 'default-consumer-tag'
+  MISSING_SOURCE_LABEL = 'no-routing-key-binding'
+  MISSING_TARGET_LABEL = 'no-consumers'
 
   def initialize(queue_name:, routing_key: nil, consumer_tag: nil)
     @queue_name = queue_name
