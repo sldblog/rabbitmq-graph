@@ -25,16 +25,16 @@ Without arguments `bin/run` will connect to `localhost:15672` with the default g
 
 ### Configuration
 
-| Setting | Environment variable | Effect | Default |
-| ------- | -------------------- | ------ | ------- |
-| Show entities | `SHOW_ENTITIES` | Toggles displaying entities in the generated graph. | `'true'` |
-| Label details | `LABEL_DETAIL` | Comma separated segment names to display on labels drawn between applications and/or entities. | `'actions'` |
-| RabbitMQ management URL | `RABBITMQ_API_URI` | Specifies the connection URL to RabbitMQ management API | `http://guest:guest@localhost:15672/` |
+| Setting | Configuration | Effect | Default |
+| ------- | ------------- | ------ | ------- |
+| RabbitMQ management URL | `-uURL`<br/>`--url=URL`<br/>or environment variable<br/>`RABBITMQ_API_URI` | Specifies the connection URL to RabbitMQ management API | http://guest:guest@localhost:15672/ |
+| Show only applications | `-a`<br/>`--applications-only` | Creates a graph without entity nodes. | disabled |
+| Label details | `-lDETAILS`<br/>`--label-detail=DETAILS` | Comma separated segment names to display on labels drawn between applications and/or entities. | `'actions'` |
 
-### Show entities
+### Show only applications
 
-- **false**: will only show application to application relations.
-- **true**: will show application to entity to application relations. The edge going into the entity and coming out of the entity will have the same label.
+- **enabled**: will only show application to application relations.
+- **disabled** (default): will show application to entity to application relations. The edge going into the entity and coming out of the entity will have the same label.
 
 ### Label details
 
