@@ -2,8 +2,7 @@
 
 source 'https://rubygems.org'
 
-gem 'hutch'
-gem 'ruby-progressbar'
+gemspec
 
 group :code_quality do
   gem 'rubocop'

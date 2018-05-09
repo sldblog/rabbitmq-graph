@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'app/route'
+require 'rabbitmq-graph/route'
 
 module RouteHelper
   def route(data)

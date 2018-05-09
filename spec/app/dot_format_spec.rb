@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'app/dot_format'
-require 'app/route'
+require 'rabbitmq-graph/dot_format'
 
 RSpec.describe DotFormat do
   describe '#present' do

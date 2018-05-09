@@ -5,7 +5,7 @@ require 'json'
 require 'logger'
 require 'ruby-progressbar'
 require 'uri'
-require 'app/route'
+require 'rabbitmq-graph/route'
 
 # Using RabbitMQ's HTTP management API, discovers the server's publisher/subscriber topology.
 #

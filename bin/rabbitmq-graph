@@ -1,14 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'bundler/setup'
-$LOAD_PATH.unshift(Bundler.root) unless $LOAD_PATH.include?(Bundler.root)
-
 require 'json'
 require 'optparse'
-require 'app/discover'
-require 'app/dot_format'
-require 'app/markdown_table_format'
+require 'rabbitmq-graph/discover'
+require 'rabbitmq-graph/dot_format'
+require 'rabbitmq-graph/markdown_table_format'
+require 'rabbitmq-graph/route'
 
 def topology(options)
   if (read_file = options[:discover][:read_topology_file])
@@ -63,7 +61,7 @@ end
 
 options = {}
 OptionParser.new do |option_parser|
-  option_parser.banner = "Usage: #{__FILE__} [options]"
+  option_parser.banner = "Usage: #{File.basename(__FILE__)} [options]"
   setup_discovery_options(options, option_parser)
   setup_format_options(options, option_parser, formats: [DotFormat, MarkdownTableFormat])
   option_parser.on('-h', '--help', 'Prints this help.') do
