@@ -9,17 +9,6 @@ RSpec.describe DotFormat do
     let(:show_entities) { true }
     let(:label_detail) { %i[actions] }
 
-    def route(data, missing_source: false, missing_target: false, default_consumer_tag: false)
-      stubs = {
-        missing_source?: missing_source,
-        missing_target?: missing_target,
-        default_consumer_tag?: default_consumer_tag,
-        entity: '',
-        actions: []
-      }.merge(data)
-      instance_double(Route, stubs)
-    end
-
     let(:topology) do
       [route(source_app: 'from', target_app: 'to', entity: 'thing', actions: %w[happened]),
        route(source_app: 'from', target_app: 'another', entity: 'clowns', actions: %w[coming fast])]

@@ -8,3 +8,8 @@ SimpleCov.start do
   add_filter '/spec/'
   add_filter '/vendor/'
 end
+
+require 'support/route_helper'
+RSpec.configure do |c|
+  c.include RouteHelper
+end

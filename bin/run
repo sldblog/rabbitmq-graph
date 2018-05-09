@@ -8,58 +8,70 @@ require 'json'
 require 'optparse'
 require 'app/discover'
 require 'app/dot_format'
+require 'app/markdown_table_format'
 
-options = {
-  topology: {},
-  discover: {
-    api_url: ENV['RABBITMQ_API_URI'] || 'http://guest:guest@localhost:15672/'
-  },
-  format: {
-    show_entities: ENV['SHOW_ENTITIES'] == 'true' || true,
-    label_detail: ENV['LABEL_DETAIL'] || 'actions'
-  }
-}
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{__FILE__} [options]"
+def topology(options)
+  if (read_file = options[:discover][:read_topology_file])
+    JSON.parse(IO.read(read_file), symbolize_names: true).map { |route_hash| Route.new(route_hash) }
+  else
+    result = Discover.new(api_url: options[:discover][:api_url]).topology
+    if (save_file = options[:discover][:save_topology_file])
+      output = "[\n  " + result.map { |e| JSON.generate(e.to_h) }.join(",\n  ") + "\n]\n"
+      IO.write(save_file, output)
+    end
+    result
+  end
+end
 
-  opts.on('-uURL', '--url=URL', 'RabbitMQ management API URL. ' \
-          'Defaults to "http://guest:guest@localhost:15672/". ' \
-          'Also configurable through the "RABBITMQ_API_URI" environment variable.') do |url|
+def setup_discovery_options(options, option_parser)
+  options[:discover] ||= {}
+  options[:discover][:api_url] = ENV['RABBITMQ_API_URI'] || 'http://guest:guest@localhost:15672/'
+  option_parser.on('-uURL', '--url=URL', 'RabbitMQ management API URL. ' \
+                   'Defaults to "http://guest:guest@localhost:15672/". ' \
+                   'Also configurable through the "RABBITMQ_API_URI" environment variable.') do |url|
     options[:discover][:api_url] = url
   end
-  opts.on('-a', '--applications-only', 'Creates a graph without entity nodes.') do |apps_only|
-    options[:format][:show_entities] = !apps_only
+  option_parser.on('--read-topology=FILE', 'Skip discovery and use a stored topology file.') do |file|
+    options[:discover][:read_topology_file] = file
   end
-  opts.on('-lDETAILS', '--label-detail=DETAILS', 'Specifies edge label format. ' \
-          'Comma separated list of "queue_name", "entity", "actions"') do |label_detail|
-    options[:format][:label_detail] = label_detail.to_s
+  option_parser.on('--save-topology=FILE', 'After discovery save the topology to the given file.') do |file|
+    options[:discover][:save_topology_file] = file
   end
-  opts.on('--read-topology=FILE', 'Skip discovery and use a stored topology file.') do |file|
-    options[:topology][:read_file] = file
+end
+
+def setup_format_options(options, option_parser, formats:)
+  options[:format] = formats.first
+  option_parser.on('--format=FORMAT', formats.map(&:to_s), "Select format to use from #{formats.join(', ')}. " \
+                   "Defaults to #{options[:format]}.") do |format|
+    options[:format] = Object.const_get(format)
   end
-  opts.on('--save-topology=FILE', 'After discovery save the topology to the given file.') do |file|
-    options[:topology][:save_file] = file
+
+  formats.each { |format| options[format] = {} }
+
+  # DotFormat specific options
+  options[DotFormat][:show_entities] = true
+  option_parser.on('--dot-applications-only', 'Creates a graph without entity nodes.') do |apps_only|
+    options[DotFormat][:show_entities] = !apps_only
   end
-  opts.on('-h', '--help', 'Prints this help.') do
-    puts opts
+
+  options[DotFormat][:label_detail] = %i[actions]
+  option_parser.on('--dot-label-detail=DETAILS', 'Specifies edge label format. ' \
+                   'Comma separated list of "queue_name", "entity", "actions"') do |label_detail|
+    options[DotFormat][:label_detail] = label_detail.to_s.split(',').map(&:strip).reject(&:empty?).map(&:to_sym)
+  end
+end
+
+options = {}
+OptionParser.new do |option_parser|
+  option_parser.banner = "Usage: #{__FILE__} [options]"
+  setup_discovery_options(options, option_parser)
+  setup_format_options(options, option_parser, formats: [DotFormat, MarkdownTableFormat])
+  option_parser.on('-h', '--help', 'Prints this help.') do
+    puts option_parser
     exit
   end
 end.parse!
 
-topology = if (read_file = options[:topology][:read_file])
-             JSON.parse(IO.read(read_file), symbolize_names: true).map { |route_hash| Route.new(route_hash) }
-           else
-             result = Discover.new(api_url: options[:discover][:api_url]).topology
-             if (save_file = options[:topology][:save_file])
-               output = "[\n  " + result.map { |e| JSON.generate(e.to_h) }.join(",\n  ") + "\n]\n"
-               IO.write(save_file, output)
-             end
-             result
-           end
-
-label_detail = options[:format][:label_detail].split(',').map(&:strip).reject(&:empty?).map(&:to_sym)
-puts DotFormat.new(
-  topology: topology,
-  show_entities: options[:format][:show_entities],
-  label_detail: label_detail
-).present
+chosen_format = options[:format]
+format_options = options[chosen_format].merge(topology: topology(options))
+puts chosen_format.new(format_options).present
