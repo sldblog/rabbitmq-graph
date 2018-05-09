@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = 'rabbitmq-graph'
-  s.version     = '0.1.0'
+  s.version     = '0.1.1'
   s.summary     = 'Discover RabbitMQ topology'
   s.description = 'Map out RabbitMQ topology with the use of routing key conventions and consumer tags.'
   s.authors     = ['David Lantos']
