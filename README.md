@@ -28,10 +28,16 @@ Without arguments `bin/run` will connect to `localhost:15672` with the default g
 | Setting | Configuration | Effect | Default |
 | ------- | ------------- | ------ | ------- |
 | RabbitMQ management URL | `-uURL`<br/>`--url=URL`<br/>or environment variable<br/>`RABBITMQ_API_URI` | Specifies the connection URL to RabbitMQ management API | http://guest:guest@localhost:15672/ |
-| Show only applications | `-a`<br/>`--applications-only` | Creates a graph without entity nodes. | disabled |
-| Label details | `-lDETAILS`<br/>`--label-detail=DETAILS` | Comma separated segment names to display on labels drawn between applications and/or entities. | `'actions'` |
 | Save topology | `--save-topology=FILE` | After discovery save the topology to the given file. | disabled |
 | Read topology | `--read-topology=FILE` | Skip discovery and use a stored topology file. | disabled |
+| Choose format | `--format=FORMAT` | Choose an output format. `--help` will give a list of available options. | `DotFormat` |
+
+#### Dot format specific options
+
+| Setting | Configuration | Effect | Default |
+| ------- | ------------- | ------ | ------- |
+| Show only applications | `--dot-applications-only` | Creates a graph without entity nodes. | disabled |
+| Label details | `--dot-label-detail=DETAILS` | Comma separated segment names to display on labels drawn between applications and/or entities. | `'actions'` |
 
 ### Show only applications
 
