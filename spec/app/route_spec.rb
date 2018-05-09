@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'app/route'
+require 'rabbitmq-graph/route'
 
 RSpec.describe Route do
   it 'extracts the source application, entity and actions from the given routing key' do

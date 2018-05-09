@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'app/markdown_table_format'
-require 'app/route'
+require 'rabbitmq-graph/markdown_table_format'
 
 RSpec.describe MarkdownTableFormat do
   let(:topology) { [] }

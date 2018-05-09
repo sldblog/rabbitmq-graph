@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'app/discover'
+require 'rabbitmq-graph/discover'
 
 RSpec.describe Discover do
   describe '#new' do
