@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rabbitmq-graph (0.1.0)
+    rabbitmq-graph (0.1.1)
       hutch (~> 0.24)
       ruby-progressbar (~> 1.9)
 
