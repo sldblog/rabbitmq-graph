@@ -35,6 +35,7 @@ class DotFormat
 
   def render_entity_subgraph
     return '' unless show_entities
+
     <<-ENTITIES
       subgraph Entities {
         node [shape=box fillcolor=turquoise style=filled]
