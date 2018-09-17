@@ -26,6 +26,7 @@ class MarkdownTableFormat
 
   def route_table(title, routes)
     return [] if routes.empty?
+
     lines = []
     lines << ''
     lines << "# #{title}"

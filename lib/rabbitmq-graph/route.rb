@@ -53,6 +53,7 @@ class Route
     return DEFAULT_CONSUMER_TAG if tag =~ /^bunny-/ || tag =~ /^hutch-/ || tag =~ /^amq\.ctag/
     return tag.split('-')[0..-6].join('-') if tag =~ /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     return tag.split('-')[0..-3].join('-') if tag =~ /[0-9]+-[0-9]+$/
+
     tag
   end
 end
