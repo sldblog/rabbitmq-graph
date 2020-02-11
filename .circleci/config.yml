@@ -6,7 +6,9 @@ defaults: &defaults
 prepare_environment: &prepare_environment
   run:
     name: Prepare environment
-    command: apk add --no-cache --no-progress build-base curl git
+    command: |
+      apk add --no-cache --no-progress build-base curl git
+      gem update --system 3.1.2
 
 restore_gems: &restore_gems
   restore_cache:
