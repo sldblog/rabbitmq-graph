@@ -1,0 +1,28 @@
+name: Integration Test
+on: [push]
+
+jobs:
+  run:
+    strategy:
+      matrix:
+        rabbitmq_version: [3.7, 3.8]
+    name: Integration @ RabbitMQ ${{ matrix.rabbitmq_version }}
+    runs-on: ubuntu-latest
+    container:
+      image: ruby:2.6-alpine3.9
+    services:
+      rabbitmq:
+        image: rabbitmq:${{ matrix.rabbitmq_version }}-management-alpine
+        ports:
+          - 5672:5672
+          - 15672:15672
+    steps:
+      - name: Prepare environment
+        run: |
+          apk add --no-cache --no-progress build-base curl git
+          gem update --system 3.1.2
+      - uses: actions/checkout@v1
+      - run: bundle install
+      - run: bundle exec rspec --tag integration
+        env:
+          RABBITMQ_API_URI: amqp://guest:guest@rabbitmq:15672
