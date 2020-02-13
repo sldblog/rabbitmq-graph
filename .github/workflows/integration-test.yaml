@@ -9,7 +9,7 @@ jobs:
     name: Integration @ RabbitMQ ${{ matrix.rabbitmq_version }}
     runs-on: ubuntu-latest
     container:
-      image: ruby:2.6-alpine3.9
+      image: ruby:2.6-alpine3.11
     services:
       rabbitmq:
         image: rabbitmq:${{ matrix.rabbitmq_version }}-management-alpine

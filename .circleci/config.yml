@@ -1,7 +1,7 @@
 defaults: &defaults
   working_directory: ~/rabbitmq-graph
   docker:
-    - image: ruby:2.6-alpine3.9
+    - image: ruby:2.6-alpine3.11
 
 prepare_environment: &prepare_environment
   run:
