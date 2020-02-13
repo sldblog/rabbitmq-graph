@@ -1,6 +1,7 @@
 # rabbitmq-graph
 
 [![CircleCI](https://circleci.com/gh/sldblog/rabbitmq-graph.svg?style=svg&circle-token=68531f42debaa4ff5b3bddb62a4672ca2eaabaf4)](https://circleci.com/gh/sldblog/rabbitmq-graph)
+[![Integration Test](https://github.com/sldblog/rabbitmq-graph/workflows/Integration%20Test/badge.svg)](https://github.com/sldblog/rabbitmq-graph/actions?query=workflow%3A%22Integration+Test%22)
 [![Maintainability](https://api.codeclimate.com/v1/badges/146dab10c24b4dd7b75e/maintainability)](https://codeclimate.com/github/sldblog/rabbitmq-graph/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/146dab10c24b4dd7b75e/test_coverage)](https://codeclimate.com/github/sldblog/rabbitmq-graph/test_coverage)
 
