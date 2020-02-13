@@ -25,4 +25,5 @@ jobs:
       - run: bundle install
       - run: bundle exec rspec --tag integration
         env:
-          RABBITMQ_API_URI: amqp://guest:guest@rabbitmq:15672
+          RABBITMQ_API_URI: http://guest:guest@rabbitmq:15672
+          RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
