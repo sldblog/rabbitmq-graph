@@ -10,5 +10,6 @@ group :code_quality do
 end
 
 group :test do
+  gem 'rest-client'
   gem 'rspec'
 end
