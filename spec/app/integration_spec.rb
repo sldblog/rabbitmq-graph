@@ -4,11 +4,16 @@ require 'spec_helper'
 
 require 'rest-client'
 require 'stringio'
+require 'uri'
 require 'rabbitmq-graph/discover'
 
 RSpec.describe 'integration', integration: true do
   def rabbitmq_api_url
     ENV.fetch('RABBITMQ_API_URI')
+  end
+
+  def rabbitmq_url
+    ENV.fetch('RABBITMQ_URI')
   end
 
   def read_consumers
@@ -23,13 +28,14 @@ RSpec.describe 'integration', integration: true do
   end
 
   before :all do
-    @pipe = IO.popen('bundle exec hutch --require spec/support/integration_consumer.rb')
+    hutch_env = { 'HUTCH_URI' => rabbitmq_url, 'HUTCH_MQ_API_HOST' => URI.parse(rabbitmq_api_url).hostname }
+    @pid = Process.spawn(hutch_env, 'bundle exec hutch --require spec/support/integration_consumer.rb')
     wait_for_consumer_to_be_ready
   end
 
   after :all do
-    Process.kill('TERM', @pipe.pid)
-    Process.wait(@pipe.pid)
+    Process.kill('TERM', @pid)
+    Process.wait(@pid)
   end
 
   let(:discover) { Discover.new(api_url: rabbitmq_api_url, output: StringIO.new) }
