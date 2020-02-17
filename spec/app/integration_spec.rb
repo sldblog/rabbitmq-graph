@@ -38,13 +38,17 @@ RSpec.describe 'integration', integration: true do
     Process.wait(@pid)
   end
 
-  let(:discover) { Discover.new(api_url: rabbitmq_api_url, output: StringIO.new) }
+  it 'maps the claim service route in dot (graphviz) format' do
+    dot_command = "bundle exec bin/rabbitmq-graph --format=DotFormat --url=#{rabbitmq_api_url}"
+    expect { system(dot_command) }.to(
+      output(/"claim_service_v2"->"claim"->"integration_test" \[label="submitted"\]/).to_stdout_from_any_process
+    )
+  end
 
-  it 'maps the claim service route' do
-    route = discover.topology.first
-    expect(route.source_app).to eq('claim_service_v2')
-    expect(route.entity).to eq('claim')
-    expect(route.actions).to include('submitted')
-    expect(route.target_app).to eq('integration_test')
+  it 'maps the claim service route in markdown table format' do
+    markdown_command = "bundle exec bin/rabbitmq-graph --format=MarkdownTableFormat --url=#{rabbitmq_api_url}"
+    expect { system(markdown_command) }.to(
+      output(/| claim_service_v2 | integration_test | claim | submitted | new_claims |/).to_stdout_from_any_process
+    )
   end
 end
