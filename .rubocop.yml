@@ -13,3 +13,12 @@ Layout/LineLength:
 Naming/FileName:
   Exclude:
     - 'lib/rabbitmq-graph.rb'
+
+Style/HashTransformValues:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: false # Disabled while Ruby 2.4 is supported
+
+Style/HashEachMethods:
+  Enabled: true
