@@ -1,7 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
 
 Metrics/BlockLength:
   Exclude:
@@ -18,7 +18,7 @@ Style/HashTransformValues:
   Enabled: true
 
 Style/HashTransformKeys:
-  Enabled: false # Disabled while Ruby 2.4 is supported
+  Enabled: true
 
 Style/HashEachMethods:
   Enabled: true
