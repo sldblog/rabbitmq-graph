@@ -5,11 +5,10 @@ jobs:
   run:
     strategy:
       matrix:
-        rabbitmq_version: [3.7, 3.8, 3.9]
-    name: Integration @ RabbitMQ ${{ matrix.rabbitmq_version }}
+        rabbitmq_version: ['3.8', '3.9']
+        ruby_version: ['2.6', '2.7', '3.0']
+    name: rabbitmq-${{ matrix.rabbitmq_version }} with ruby-${{ matrix.ruby_version }}
     runs-on: ubuntu-latest
-    container:
-      image: ruby:2.6-alpine3.14
     services:
       rabbitmq:
         image: rabbitmq:${{ matrix.rabbitmq_version }}-management-alpine
@@ -17,13 +16,15 @@ jobs:
           - 5672:5672
           - 15672:15672
     steps:
-      - name: Prepare environment
-        run: |
-          apk add --no-cache --no-progress build-base curl git
-          gem update --system 3.2.30
       - uses: actions/checkout@v2
-      - run: bundle install
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby_version }}
+          bundler-cache: true
+      - uses: ifaxity/wait-on-action@v1
+        with:
+          resource: http://localhost:15672
       - run: bundle exec rspec --tag integration
         env:
-          RABBITMQ_API_URI: http://guest:guest@rabbitmq:15672
-          RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+          RABBITMQ_API_URI: http://guest:guest@localhost:15672
+          RABBITMQ_URI: amqp://guest:guest@localhost:5672
