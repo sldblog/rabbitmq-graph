@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/sldblog/rabbitmq-graph'
   s.metadata    = { 'source_code_uri' => 'https://github.com/sldblog/rabbitmq-graph' }
 
-  s.required_ruby_version = '~> 2.5'
+  s.required_ruby_version = '>= 2.5', '< 4'
 
   s.add_runtime_dependency 'hutch', '>= 0.24', '< 2.0'
   s.add_runtime_dependency 'ruby-progressbar', '~> 1.9'
