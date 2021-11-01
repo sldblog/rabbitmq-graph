@@ -5,11 +5,11 @@ jobs:
   run:
     strategy:
       matrix:
-        rabbitmq_version: [3.7, 3.8]
+        rabbitmq_version: [3.7, 3.8, 3.9]
     name: Integration @ RabbitMQ ${{ matrix.rabbitmq_version }}
     runs-on: ubuntu-latest
     container:
-      image: ruby:2.6-alpine3.11
+      image: ruby:2.6-alpine3.14
     services:
       rabbitmq:
         image: rabbitmq:${{ matrix.rabbitmq_version }}-management-alpine
@@ -20,8 +20,8 @@ jobs:
       - name: Prepare environment
         run: |
           apk add --no-cache --no-progress build-base curl git
-          gem update --system 3.1.2
-      - uses: actions/checkout@v1
+          gem update --system 3.2.30
+      - uses: actions/checkout@v2
       - run: bundle install
       - run: bundle exec rspec --tag integration
         env:
