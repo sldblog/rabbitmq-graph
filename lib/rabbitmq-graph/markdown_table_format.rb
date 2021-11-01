@@ -43,6 +43,6 @@ class MarkdownTableFormat
     columns << route.entity
     columns << route.actions.join('.')
     columns << route.queue_name
-    '| ' + columns.join(' | ') + ' |'
+    "| #{columns.join(' | ')} |"
   end
 end

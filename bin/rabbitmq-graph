@@ -14,7 +14,7 @@ def topology(options)
   else
     result = Discover.new(api_url: options[:discover][:api_url]).topology
     if (save_file = options[:discover][:save_topology_file])
-      output = "[\n  " + result.map { |e| JSON.generate(e.to_h) }.join(",\n  ") + "\n]\n"
+      output = "[\n  #{result.map { |e| JSON.generate(e.to_h) }.join(",\n  ")}\n]\n"
       IO.write(save_file, output)
     end
     result
