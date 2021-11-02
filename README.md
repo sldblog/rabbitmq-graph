@@ -23,6 +23,23 @@ Discover RabbitMQ topology.
 
 Without arguments `bin/rabbitmq-graph` will connect to `localhost:15672` with the default guest user.
 
+## How to build/test?
+
+Unit tests:
+```
+bundle install
+bundle exec rspec
+```
+
+Integration:
+```
+docker run -d -p 15672:15672 -p 5672:5672 rabbitmq:3.9-management-alpine
+export RABBITMQ_API_URI='http://guest:guest@localhost:15672'
+export RABBITMQ_URI='amqp://guest:guest@localhost:5672'
+bundle exec rspec --tag=integration
+bundle exec bin/rabbitmq-graph
+```
+
 ### Configuration
 
 | Setting | Configuration | Effect | Default |
