@@ -79,6 +79,8 @@ GEM
       unicode-display_width (>= 1.4.0, < 3.0)
     rubocop-ast (1.12.0)
       parser (>= 3.0.1.1)
+    rubocop-rspec (2.5.0)
+      rubocop (~> 1.19)
     ruby-progressbar (1.11.0)
     set (1.0.2)
     simplecov (0.17.1)
@@ -105,6 +107,7 @@ DEPENDENCIES
   rest-client
   rspec
   rubocop
+  rubocop-rspec
   simplecov (< 0.18)
 
 BUNDLED WITH

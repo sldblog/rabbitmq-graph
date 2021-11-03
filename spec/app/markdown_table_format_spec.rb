@@ -4,8 +4,9 @@ require 'spec_helper'
 require 'rabbitmq-graph/markdown_table_format'
 
 RSpec.describe MarkdownTableFormat do
-  let(:topology) { [] }
   subject(:present) { described_class.new(topology: topology).present }
+
+  let(:topology) { [] }
 
   it 'shows routes without consumers as a separate section' do
     topology << route(queue_name: 'no_consumer_queue', source_app: 'connected_part', target_app: 'none',

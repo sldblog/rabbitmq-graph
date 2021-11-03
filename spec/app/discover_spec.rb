@@ -31,17 +31,9 @@ RSpec.describe Discover do
   end
 
   describe '#topology' do
+    subject(:topology) { described_class.new(api_client: api_client, output: fake_output).topology }
+
     let(:fake_output) { StringIO.new }
-    let(:api_client) { double(:api_client, bindings: bindings, queues: queues) }
-    let(:bindings) { [] }
-    let(:queues) { [] }
-
-    def register_queue_details_call(api_client, path, consumer_details)
-      body = { 'consumer_details' => consumer_details }
-      response = double(:response, body: body.to_json)
-      allow(api_client).to receive(:query_api).with(path: path).and_return(response)
-    end
-
     let(:setup_transaction_queue) do
       queues << { 'name' => 'transaction_queue', 'vhost' => '/' }
       register_queue_details_call(
@@ -53,13 +45,19 @@ RSpec.describe Discover do
         ]
       )
     end
-
     let(:setup_empty_transaction_queue) do
       queues << { 'name' => 'transaction_queue', 'vhost' => '/' }
       register_queue_details_call(api_client, '/queues/%2F/transaction_queue', [])
     end
+    let(:api_client) { double(:api_client, bindings: bindings, queues: queues) }
+    let(:bindings) { [] }
+    let(:queues) { [] }
 
-    subject(:topology) { described_class.new(api_client: api_client, output: fake_output).topology }
+    def register_queue_details_call(api_client, path, consumer_details)
+      body = { 'consumer_details' => consumer_details }
+      response = double(:response, body: body.to_json)
+      allow(api_client).to receive(:query_api).with(path: path).and_return(response)
+    end
 
     it 'reports all consumer tags for each routing key in each queue' do
       bindings << { 'source' => 'standard', 'destination' => 'transaction_queue',

@@ -5,19 +5,19 @@ require 'rabbitmq-graph/dot_format'
 
 RSpec.describe DotFormat do
   describe '#present' do
+    subject(:present) do
+      described_class.new(topology: topology, show_entities: show_entities, label_detail: label_detail).present
+    end
+
     let(:show_entities) { true }
+    let(:application_subgraph) { present.match(/subgraph Apps {(.*?)}/m)[1] }
+    let(:entity_subgraph) { present.match(/subgraph Entities {(.*?)}/m)[1] }
     let(:label_detail) { %i[actions] }
 
     let(:topology) do
       [route(source_app: 'from', target_app: 'to', entity: 'thing', actions: %w[happened]),
        route(source_app: 'from', target_app: 'another', entity: 'clowns', actions: %w[coming fast])]
     end
-
-    subject(:present) do
-      described_class.new(topology: topology, show_entities: show_entities, label_detail: label_detail).present
-    end
-    let(:application_subgraph) { present.match(/subgraph Apps {(.*?)}/m)[1] }
-    let(:entity_subgraph) { present.match(/subgraph Entities {(.*?)}/m)[1] }
 
     it 'shows all application nodes in a subgraph' do
       expect(application_subgraph).to include(%("from" []\n))
