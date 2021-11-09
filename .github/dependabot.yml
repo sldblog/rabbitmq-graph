@@ -9,15 +9,3 @@ updates:
   - dependency-name: simplecov
     versions:
     - "> 0.17.1"
-  - dependency-name: simplecov
-    versions:
-    - ">= 0.18.a, < 0.19"
-  - dependency-name: rubocop
-    versions:
-    - 1.10.0
-    - 1.11.0
-    - 1.12.0
-    - 1.12.1
-    - 1.8.1
-    - 1.9.0
-    - 1.9.1
