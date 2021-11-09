@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 
+require 'tempfile'
 require 'rest-client'
 require 'stringio'
 require 'uri'
@@ -28,6 +29,7 @@ RSpec.describe 'integration', integration: true do
   end
 
   before :all do
+    @topology_cache_file = Tempfile.new('topology_cache').path
     hutch_env = { 'HUTCH_URI' => rabbitmq_url, 'HUTCH_MQ_API_HOST' => URI.parse(rabbitmq_api_url).hostname }
     @pid = Process.spawn(hutch_env, 'bundle exec hutch --require spec/support/integration_consumer.rb')
     wait_for_consumer_to_be_ready
@@ -46,10 +48,10 @@ RSpec.describe 'integration', integration: true do
   end
 
   it 'successfully writes and reads a topology file' do
-    save_command = "bundle exec bin/rabbitmq-graph --save-topology=topology_cache --url=#{rabbitmq_api_url}"
+    save_command = "bundle exec bin/rabbitmq-graph --save-topology=#{@topology_cache_file} --url=#{rabbitmq_api_url}"
     system(save_command)
 
-    read_command = 'bundle exec bin/rabbitmq-graph --read-topology=topology_cache --format=DotFormat ' \
+    read_command = "bundle exec bin/rabbitmq-graph --read-topology=#{@topology_cache_file} --format=DotFormat " \
                    "--url=#{rabbitmq_api_url}"
     expect { system(read_command) }.to(
       output(/"claim_service_v2"->"claim"->"integration_test" \[label="submitted"\]/).to_stdout_from_any_process
