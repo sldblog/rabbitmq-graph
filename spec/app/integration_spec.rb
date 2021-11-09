@@ -45,6 +45,17 @@ RSpec.describe 'integration', integration: true do
     )
   end
 
+  it 'successfully writes and reads a topology file' do
+    save_command = "bundle exec bin/rabbitmq-graph --save-topology=topology_cache --url=#{rabbitmq_api_url}"
+    system(save_command)
+
+    read_command = 'bundle exec bin/rabbitmq-graph --read-topology=topology_cache --format=DotFormat ' \
+                   "--url=#{rabbitmq_api_url}"
+    expect { system(read_command) }.to(
+      output(/"claim_service_v2"->"claim"->"integration_test" \[label="submitted"\]/).to_stdout_from_any_process
+    )
+  end
+
   it 'maps the claim service route in markdown table format' do
     markdown_command = "bundle exec bin/rabbitmq-graph --format=MarkdownTableFormat --url=#{rabbitmq_api_url}"
     expect { system(markdown_command) }.to(
