@@ -35,7 +35,7 @@ class Discover
       routes = publishers
                .flat_map { |route| consumers.map { |consumer| route.merge(consumer) } }
                .map { |route| route.delete_if { |_key, value| value.nil? } }
-               .map { |route| Route.new(route.merge(queue_name: queue_name)) }
+               .map { |route| Route.new(queue_name: queue_name, **route) }
                .uniq
       result.concat(routes)
     end

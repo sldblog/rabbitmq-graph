@@ -10,7 +10,9 @@ require 'rabbitmq-graph/route'
 
 def topology(options)
   if (read_file = options[:discover][:read_topology_file])
-    JSON.parse(File.read(read_file), symbolize_names: true).map { |route_hash| Route.new(route_hash) }
+    JSON.parse(File.read(read_file), symbolize_names: true).map do |route_hash|
+      Route.new(queue_name: route_hash[:queue_name], **route_hash)
+    end
   else
     result = Discover.new(api_url: options[:discover][:api_url]).topology
     if (save_file = options[:discover][:save_topology_file])
@@ -76,4 +78,4 @@ end.parse!
 
 chosen_format = options[:format]
 format_options = options[chosen_format].merge(topology: topology(options))
-puts chosen_format.new(format_options).present
+puts chosen_format.new(**format_options).present
