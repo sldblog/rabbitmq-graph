@@ -74,10 +74,10 @@ Any combination and order of the above is allowed.
 
 ### Example
 
-Running the discovery against a dockerised `rabbitmq:3.6-management`:
+Running the discovery against a dockerised `rabbitmq:3.9-management-alpine`:
 
 ```
-$ docker run --detach --publish 5672:5672 --publish 15672:15672 rabbitmq:3.6-management
+$ docker run --detach --publish 5672:5672 --publish 15672:15672 rabbitmq:3.9-management-alpine
 
 $ RABBITMQ_API_URI=http://localhost:15672/ bin/rabbitmq-graph > test.dot
 I, [2018-04-30T13:05:29.735060 #90042]  INFO -- : connecting to rabbitmq HTTP API (http://guest@127.0.0.1:15672/)
