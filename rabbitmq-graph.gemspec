@@ -11,7 +11,8 @@ Gem::Specification.new do |s|
   s.executables = ['rabbitmq-graph']
   s.files       = `git ls-files lib bin *.gemspec *.md`.split
   s.homepage    = 'https://github.com/sldblog/rabbitmq-graph'
-  s.metadata    = { 'source_code_uri' => 'https://github.com/sldblog/rabbitmq-graph' }
+  s.metadata    = { 'source_code_uri' => 'https://github.com/sldblog/rabbitmq-graph',
+                    'rubygems_mfa_required' => 'true' }
 
   s.required_ruby_version = '>= 2.5', '< 4'
 
