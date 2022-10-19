@@ -7,7 +7,7 @@ gemspec
 group :code_quality do
   gem 'rubocop'
   gem 'rubocop-rspec'
-  gem 'simplecov', '< 0.18'
+  gem 'simplecov'
 end
 
 group :test do
