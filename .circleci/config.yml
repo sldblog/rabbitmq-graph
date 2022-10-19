@@ -1,14 +1,14 @@
 defaults: &defaults
   working_directory: ~/rabbitmq-graph
   docker:
-    - image: ruby:2.6-alpine3.11
+    - image: ruby:3.0-alpine3.16
 
 prepare_environment: &prepare_environment
   run:
     name: Prepare environment
     command: |
       apk add --no-cache --no-progress build-base curl git
-      gem update --system 3.1.2
+      gem update --system 3.3.24
 
 restore_gems: &restore_gems
   restore_cache:
