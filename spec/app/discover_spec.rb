@@ -11,14 +11,14 @@ RSpec.describe Discover do
       described_class.new(api_url: 'https://hostgiven/', api_client: api_client)
       expect(Hutch::Config[:mq_api_host]).to eq('hostgiven')
       expect(Hutch::Config[:mq_api_port]).to eq(443)
-      expect(Hutch::Config[:mq_api_ssl]).to eq(true)
+      expect(Hutch::Config[:mq_api_ssl]).to be(true)
     end
 
     it 'configures hutch based on HTTP URL' do
       described_class.new(api_url: 'http://hostgiven/', api_client: api_client)
       expect(Hutch::Config[:mq_api_host]).to eq('hostgiven')
       expect(Hutch::Config[:mq_api_port]).to eq(80)
-      expect(Hutch::Config[:mq_api_ssl]).to eq(false)
+      expect(Hutch::Config[:mq_api_ssl]).to be(false)
     end
 
     it 'configures hutch based on URL with username, password and port' do
