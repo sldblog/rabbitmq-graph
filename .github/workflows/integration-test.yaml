@@ -5,8 +5,8 @@ jobs:
   run:
     strategy:
       matrix:
-        rabbitmq_version: ['3.8', '3.9']
-        ruby_version: ['2.6', '2.7', '3.0']
+        rabbitmq_version: ['3.9', '3.10', '3.11']
+        ruby_version: ['2.7', '3.0', '3.1']
     name: rabbitmq-${{ matrix.rabbitmq_version }} with ruby-${{ matrix.ruby_version }}
     runs-on: ubuntu-latest
     services:
